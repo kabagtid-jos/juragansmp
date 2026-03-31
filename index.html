@@ -53,6 +53,7 @@
         html.dark .bg-blue-50 { background-color: rgba(37, 99, 235, 0.1) !important; }
         html.dark .bg-green-50 { background-color: rgba(34, 197, 94, 0.1) !important; border-color: rgba(34, 197, 94, 0.2) !important; }
         html.dark .bg-red-50 { background-color: rgba(239, 68, 68, 0.1) !important; border-color: rgba(239, 68, 68, 0.2) !important; }
+        html.dark .bg-teal-50 { background-color: rgba(20, 184, 166, 0.1) !important; border-color: rgba(20, 184, 166, 0.2) !important; }
         html.dark #view-login { background: linear-gradient(to bottom right, #4f46e5, #9333ea) !important; }
         @media print {
             .page-break { page-break-after: always !important; break-after: page !important; }
@@ -400,7 +401,7 @@
 
                 <!-- List Agenda -->
                 <div class="flex items-center justify-between mb-3">
-                    <h3 class="text-gray-800 font-bold text-sm flex items-center"><i class="fas fa-list-ul mr-2 text-indigo-600"></i> Agenda Kegiatan</h3>
+                    <h3 class="text-gray-800 font-bold text-sm flex items-center"><i class="fas fa-list-ul mr-2 text-teal-600"></i> Agenda Kegiatan</h3>
                 </div>
                 <div id="agenda-list-container" class="space-y-3">
                     <div class="text-center text-gray-400 py-4 text-xs"><i class="fas fa-spinner fa-spin mr-1"></i> Memuat agenda...</div>
@@ -457,8 +458,8 @@
         // =========================================================================
         // PENGATURAN API GOOGLE APPS SCRIPT
         // =========================================================================
-        // URL di bawah ini sudah disesuaikan dengan Web App GAS Anda
-        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbwkPdvJfc5N1atR5ghAt53NliohMAImnc4u3GgiVFMm2DO6vfpB_EF_StqrsNkozoV9uA/exec";
+        // Menggunakan URL Web App GAS terbaru sesuai permintaan
+        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxqp8InH7tqCka8C4HBTcOcwB4RLWp9c11D3roBA6UQvLpg3lcdSrVMQAnAM7k37DFyag/exec";
 
         // Fungsi pembungkus untuk memanggil Google Apps Script API via fetch()
         function callAPI(action, payload = null) {
@@ -562,7 +563,7 @@
                         <h4 class="font-bold text-lg tracking-wide mb-1">Jumat Mubarok</h4>
                         <p class="text-[11px] text-white text-opacity-90 leading-relaxed">Hari libur pesantren.<br>Mari perbanyak amal ibadah dan shalawat.</p>
                     </div>`;
-                return; // Hentikan eksekusi, tidak perlu memuat jadwal dari server
+                return; // Hentikan eksekusi
             }
 
             container.innerHTML = `<div class="text-center text-white text-opacity-70 text-xs py-4"><i class="fas fa-spinner fa-spin mr-2"></i>Memuat jadwal...</div>`;
@@ -587,11 +588,74 @@
             });
         }
 
+        // OPTIMASI: Fungsi render dashboard dipisah agar bisa disuplai data bawaan (bundled) dari login
+        function renderDashboardData(res) {
+            const jc = document.getElementById('jadwal-container');
+            const bc = document.getElementById('belum-isi-container');
+            const ic = document.getElementById('izin-container');
+            const sac = document.getElementById('siswa-absen-container');
+
+            if(currentUserRole === 'Guru') {
+                let btnJurnal = document.getElementById('menu-isi-jurnal');
+                let hasSchedule = res.jadwal && res.jadwal.length > 0;
+                let isPending = res.belumIsi && res.belumIsi.some(g => {
+                    let rawG = String(g).trim(); let pureName = rawG.includes(" (") ? rawG.split(" (")[0].trim() : rawG;
+                    return pureName === String(currentUser).trim();
+                });
+                
+                if (new Date().getDay() === 5) { 
+                    btnJurnal.onclick = () => showToast("Hari Jumat libur, tidak ada pengisian jurnal."); 
+                    btnJurnal.classList.add('opacity-60', 'cursor-not-allowed'); 
+                }
+                else if (!hasSchedule) { btnJurnal.onclick = () => showToast("Anda tidak ada jadwal hari ini."); btnJurnal.classList.add('opacity-60', 'cursor-not-allowed'); }
+                else if (!isPending) { btnJurnal.onclick = () => showToast("Semua jurnal sudah diisi."); btnJurnal.classList.add('opacity-60', 'cursor-not-allowed'); }
+                else { btnJurnal.onclick = () => openInputJurnal(); btnJurnal.classList.remove('opacity-60', 'cursor-not-allowed'); }
+            }
+
+            if (new Date().getDay() === 5) {
+                jc.innerHTML = `
+                <div class="bg-green-50 border border-green-200 rounded-xl p-4 text-center shadow-sm">
+                    <i class="fas fa-mosque text-3xl text-green-500 mb-2"></i>
+                    <h4 class="font-bold text-green-800 text-sm">Jumat Mubarok</h4>
+                    <p class="text-xs text-green-600 mt-1">Hari libur pesantren.</p>
+                </div>`;
+            } else {
+                jc.innerHTML = (res.jadwal && res.jadwal.length) ? res.jadwal.map(j => `
+                    <div class="bg-white border border-gray-100 rounded-lg p-3 shadow-sm flex justify-between items-center border-l-4 border-l-blue-500">
+                        <div><h4 class="font-bold text-gray-800 text-sm">${j.mapel}</h4><p class="text-xs text-gray-500">${j.kelas} ${currentUserRole === 'TU' ? ' ('+j.guru+')' : ''}</p></div>
+                        <div class="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-1 rounded">${j.jam}</div>
+                    </div>`).join('') : '<div class="bg-gray-50 rounded-lg p-3 text-center text-xs text-gray-500">Tidak ada jadwal hari ini</div>';
+            }
+
+            bc.innerHTML = (res.belumIsi && res.belumIsi.length) ? res.belumIsi.map(g => `<li>• ${g}</li>`).join('') : '<li class="text-green-500"><i class="fas fa-check"></i> Semua guru sudah isi</li>';
+            ic.innerHTML = (res.izin && res.izin.length) ? res.izin.map(g => `<li>• ${g}</li>`).join('') : '<li>Tidak ada guru izin</li>';
+            
+            sac.innerHTML = (res.siswaAbsen && res.siswaAbsen.length) ? res.siswaAbsen.map(s => {
+                let badge = s.keterangan === 'Sakit' ? 'bg-yellow-100 text-yellow-700' : (s.keterangan === 'Izin' ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700');
+                return `<li class="flex justify-between items-center border-b border-gray-50 pb-2 last:border-0 last:pb-0">
+                    <div><span class="font-semibold text-gray-700">${s.nama}</span><span class="text-[10px] text-gray-400 ml-1">(${s.kelas})</span></div>
+                    <span class="text-[10px] px-2 py-0.5 rounded-full font-bold ${badge}">${s.keterangan}</span></li>`;
+            }).join('') : '<li class="text-green-500 text-xs"><i class="fas fa-check-circle"></i> Semua siswa hadir</li>';
+        }
+
+        function loadDashboardData() {
+            const jc = document.getElementById('jadwal-container');
+            const bc = document.getElementById('belum-isi-container');
+            jc.innerHTML = '<div class="text-xs text-gray-500 text-center py-2">Memuat...</div>';
+            bc.innerHTML = '<li class="text-xs text-gray-500">Memuat...</li>';
+            
+            const payloadGuru = currentUserRole === 'TU' ? 'ALL' : currentUser;
+            callAPI('getDashboardData', payloadGuru).then(res => {
+                if(res && res.success) renderDashboardData(res);
+                else jc.innerHTML = '<p class="text-xs text-red-500">Gagal memuat data</p>'; 
+            }).catch(() => { jc.innerHTML = '<p class="text-xs text-red-500">Koneksi terputus</p>'; });
+        }
+
         function handleLogin() {
             const niyInput = document.getElementById('niy');
             if(!niyInput || !niyInput.value.trim()) return showToast("NIY kosong!");
             
-            showLoader("Mengecek NIY...");
+            showLoader("Menyiapkan Data Anda...");
             callAPI('login', niyInput.value).then(res => {
                 hideLoader();
                 if (res && res.success) {
@@ -625,71 +689,24 @@
                     }
 
                     document.getElementById('loginForm').reset();
-                    switchView('view-dashboard'); showToast("Login berhasil!");
-                    loadDashboardData();
-                    checkTodayAgenda(); // Cek popup agenda hari ini
+                    switchView('view-dashboard'); 
+                    showToast("Login berhasil!");
+                    
+                    // OPTIMASI: Langsung pakai data bawaan (bundled data) dari respon login
+                    if (res.dashData && res.dashData.success) renderDashboardData(res.dashData);
+                    else loadDashboardData(); // fallback jika gagal bundle
+
+                    // OPTIMASI: Langsung pakai agenda bawaan
+                    if (res.agendas && res.agendas.success) {
+                        globalAgendas = res.agendas.data || [];
+                        if (res.agendas.todayAgendas && res.agendas.todayAgendas.length > 0) {
+                            showAgendaModal(res.agendas.todayAgendas);
+                        }
+                    } else {
+                        checkTodayAgenda();
+                    }
                 } else { showToast(res ? res.message : "Gagal Login"); }
             }).catch(() => { hideLoader(); showToast("Terjadi kesalahan jaringan."); });
-        }
-
-        function loadDashboardData() {
-            const jc = document.getElementById('jadwal-container');
-            const bc = document.getElementById('belum-isi-container');
-            const ic = document.getElementById('izin-container');
-            const sac = document.getElementById('siswa-absen-container');
-            
-            jc.innerHTML = '<div class="text-xs text-gray-500 text-center py-2">Memuat...</div>';
-            bc.innerHTML = '<li class="text-xs text-gray-500">Memuat...</li>';
-            
-            const payloadGuru = currentUserRole === 'TU' ? 'ALL' : currentUser;
-            
-            callAPI('getDashboardData', payloadGuru).then(res => {
-                if(res && res.success) {
-                    if(currentUserRole === 'Guru') {
-                        let btnJurnal = document.getElementById('menu-isi-jurnal');
-                        let hasSchedule = res.jadwal && res.jadwal.length > 0;
-                        let isPending = res.belumIsi && res.belumIsi.some(g => {
-                            let rawG = String(g).trim(); let pureName = rawG.includes(" (") ? rawG.split(" (")[0].trim() : rawG;
-                            return pureName === String(currentUser).trim();
-                        });
-                        
-                        // Kunci tombol isi jurnal jika hari Jumat
-                        if (new Date().getDay() === 5) { 
-                            btnJurnal.onclick = () => showToast("Hari Jumat libur, tidak ada pengisian jurnal."); 
-                            btnJurnal.classList.add('opacity-60', 'cursor-not-allowed'); 
-                        }
-                        else if (!hasSchedule) { btnJurnal.onclick = () => showToast("Anda tidak ada jadwal hari ini."); btnJurnal.classList.add('opacity-60', 'cursor-not-allowed'); }
-                        else if (!isPending) { btnJurnal.onclick = () => showToast("Semua jurnal sudah diisi."); btnJurnal.classList.add('opacity-60', 'cursor-not-allowed'); }
-                        else { btnJurnal.onclick = () => openInputJurnal(); btnJurnal.classList.remove('opacity-60', 'cursor-not-allowed'); }
-                    }
-
-                    // Tampilan Jadwal di Dashboard jika Hari Jumat
-                    if (new Date().getDay() === 5) {
-                        jc.innerHTML = `
-                        <div class="bg-green-50 border border-green-200 rounded-xl p-4 text-center shadow-sm">
-                            <i class="fas fa-mosque text-3xl text-green-500 mb-2"></i>
-                            <h4 class="font-bold text-green-800 text-sm">Jumat Mubarok</h4>
-                            <p class="text-xs text-green-600 mt-1">Hari libur pesantren.</p>
-                        </div>`;
-                    } else {
-                        jc.innerHTML = (res.jadwal && res.jadwal.length) ? res.jadwal.map(j => `
-                            <div class="bg-white border border-gray-100 rounded-lg p-3 shadow-sm flex justify-between items-center border-l-4 border-l-blue-500">
-                                <div><h4 class="font-bold text-gray-800 text-sm">${j.mapel}</h4><p class="text-xs text-gray-500">${j.kelas} ${currentUserRole === 'TU' ? ' ('+j.guru+')' : ''}</p></div>
-                                <div class="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-1 rounded">${j.jam}</div>
-                            </div>`).join('') : '<div class="bg-gray-50 rounded-lg p-3 text-center text-xs text-gray-500">Tidak ada jadwal hari ini</div>';
-                    }
-
-                    bc.innerHTML = (res.belumIsi && res.belumIsi.length) ? res.belumIsi.map(g => `<li>• ${g}</li>`).join('') : '<li class="text-green-500"><i class="fas fa-check"></i> Semua guru sudah isi</li>';
-                    ic.innerHTML = (res.izin && res.izin.length) ? res.izin.map(g => `<li>• ${g}</li>`).join('') : '<li>Tidak ada guru izin</li>';
-                    
-                    sac.innerHTML = (res.siswaAbsen && res.siswaAbsen.length) ? res.siswaAbsen.map(s => {
-                        let badge = s.keterangan === 'Sakit' ? 'bg-yellow-100 text-yellow-700' : (s.keterangan === 'Izin' ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700');
-                        return `<li class="flex justify-between items-center border-b border-gray-50 pb-2 last:border-0 last:pb-0">
-                            <div><span class="font-semibold text-gray-700">${s.nama}</span><span class="text-[10px] text-gray-400 ml-1">(${s.kelas})</span></div>
-                            <span class="text-[10px] px-2 py-0.5 rounded-full font-bold ${badge}">${s.keterangan}</span></li>`;
-                    }).join('') : '<li class="text-green-500 text-xs"><i class="fas fa-check-circle"></i> Semua siswa hadir</li>';
-                } else { jc.innerHTML = '<p class="text-xs text-red-500">Gagal memuat data</p>'; }
-            }).catch(() => { jc.innerHTML = '<p class="text-xs text-red-500">Koneksi terputus</p>'; });
         }
 
         function openInputJurnal() {
@@ -891,9 +908,16 @@
             } else {
                 document.getElementById('admin-agenda-form').classList.add('hidden');
             }
-            // Reset view ke bulan saat ini ketika dibuka
+            
             currentDateView = new Date(); 
-            loadAgendas();
+            
+            // OPTIMASI: Langsung render jika data sudah ada (Cepat/Tanpa Loading)
+            if (globalAgendas && globalAgendas.length > 0) {
+                renderCalendar();
+                renderAgendaList();
+            } else {
+                loadAgendas();
+            }
         }
 
         function loadAgendas() {
@@ -971,7 +995,6 @@
                     textClasses += " font-bold";
                 }
 
-                // Mengubah text-sm menjadi text-lg agar angka terlihat lebih besar
                 gridHtml += `
                     <div class="${baseClasses}" onclick="scrollToAgenda('${dateStr}')">
                         <span class="${textClasses} text-lg mb-1">${day}</span>
@@ -1007,7 +1030,7 @@
                 <div id="agenda-${a.tanggal}" class="flex items-start mb-3 bg-white p-3.5 rounded-xl shadow-sm border border-gray-100 transition-all duration-300">
                     <div class="flex flex-col items-center justify-center min-w-[3.5rem] p-1.5 border border-gray-200 rounded-lg mr-3 bg-gray-50 shadow-inner">
                         <span class="text-[10px] text-gray-500 font-medium uppercase tracking-wider">${monthShort}</span>
-                        <span class="text-xl font-bold text-indigo-600 leading-none mt-0.5">${day}</span>
+                        <span class="text-xl font-bold text-teal-600 leading-none mt-0.5">${day}</span>
                     </div>
                     <div class="flex-1 pt-0.5">
                         <h4 class="font-bold text-gray-800 text-sm leading-tight">${a.judul}</h4>
