@@ -57,40 +57,33 @@
         html.dark #view-login { background: linear-gradient(to bottom right, #4f46e5, #9333ea) !important; }
         
         /* =======================================================
-           PENGATURAN CETAK (PRINT) - 100% PRESISI VIA CSS
+           PENGATURAN CETAK (PRINT) - SEDERHANA & KUAT
            ======================================================= */
         @media print {
             .page-break { page-break-after: always !important; break-after: page !important; }
-            .print-page-1 { page-break-after: always !important; break-after: page !important; }
             html, body { height: auto !important; overflow: visible !important; background-color: #ffffff !important; margin: 0 !important; padding: 0 !important; }
             #app-wrapper { max-width: 100% !important; width: 100% !important; height: auto !important; overflow: visible !important; background: #ffffff !important; box-shadow: none !important; position: static !important; display: block !important; }
             
-            /* Sembunyikan SEMUA view secara default, hanya biarkan yang diprint */
-            .app-view { display: none !important; }
+            /* Sembunyikan SEMUA elemen selain view yang sedang aktif */
+            .app-view:not(.active) { display: none !important; }
+            .app-view.active { display: block !important; padding: 0 !important; background: #ffffff !important; }
             
-            /* --- TAHUNAN --- */
-            body.printing-yearly #view-recap-yearly { display: block !important; background: #ffffff !important; padding: 0 !important; }
-            body.printing-yearly #print-all-gurus-container { display: block !important; }
-            body.printing-yearly #single-guru-container { display: none !important; }
-
-            /* --- BULANAN --- */
-            body.printing-monthly #view-recap-monthly { display: block !important; background: #ffffff !important; padding: 0 !important; }
-            body.printing-monthly .overflow-x-auto { overflow: visible !important; }
+            /* Menghilangkan scroll saat print */
+            .overflow-x-auto { overflow: visible !important; }
             
-            /* LOGIKA UTAMA: Sembunyikan Tabel yang TIDAK DIKLIK */
-            body.print-mode-grid #print-summary { display: none !important; }
-            body.print-mode-grid #print-absen-siswa { display: none !important; }
-
-            body.print-mode-summary #print-grid { display: none !important; }
-            body.print-mode-summary #print-absen-siswa { display: none !important; }
-            
+            /* Menjaga styling warna saat print */
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            
             h3 { page-break-after: avoid; }
             .bg-white, .glass-card, canvas { page-break-inside: avoid; }
             .guru-print-block { page-break-inside: avoid; margin-bottom: 20px; }
             table { page-break-inside: auto; width: 100% !important; }
             tr { page-break-inside: avoid; page-break-after: auto; }
             td, th { word-wrap: break-word; }
+            
+            /* Khusus Tahunan agar detail guru tampil */
+            #print-all-gurus-container { display: block !important; }
+            #single-guru-container { display: none !important; }
         }
     </style>
 </head>
@@ -431,37 +424,34 @@
             </div>
         </div>
 
-        <!-- 4. REKAP BULANAN -->
+        <!-- 4. REKAP BULANAN DENGAN TAB -->
         <div id="view-recap-monthly" class="app-view bg-gray-50 print:bg-white">
             <div class="bg-white shadow-sm px-4 py-4 flex items-center sticky top-0 z-10 flex-shrink-0 print:hidden">
                 <button type="button" onclick="switchView('view-dashboard')" class="text-gray-600 hover:text-indigo-600 p-2"><i class="fas fa-arrow-left text-lg"></i></button>
-                <h2 class="ml-3 font-semibold text-gray-800">Rekap Kehadiran</h2>
+                <h2 class="ml-3 font-semibold text-gray-800">Rekap Bulanan</h2>
             </div>
+            
             <div class="p-6 pb-20 print:p-0">
-                <div class="flex space-x-2 mb-6 print:hidden">
+                <div class="flex space-x-2 mb-4 print:hidden">
                     <input type="month" id="filter-month" class="flex-1 p-3 border border-gray-300 rounded-xl focus:outline-none focus:border-indigo-500">
                     <button type="button" onclick="loadMonthlyRecap()" class="bg-indigo-600 text-white px-4 rounded-xl shadow hover:bg-indigo-700"><i class="fas fa-search"></i></button>
                 </div>
                 
-                <!-- CONTAINER HASIL REKAP -->
-                <div id="monthly-result-container" class="pb-4 print:pb-0">
-                    <div class="text-center text-gray-400 py-10 print:hidden"><i class="fas fa-search text-4xl mb-3"></i><p>Pilih bulan dan klik cari.</p></div>
+                <!-- TAB NAVIGATION -->
+                <div id="monthly-tabs" class="hidden grid-cols-2 gap-2 mb-4 print:hidden bg-gray-200 p-1 rounded-xl">
+                    <button type="button" id="tab-btn-grid" onclick="switchMonthlyTab('grid')" class="py-2 text-sm font-semibold rounded-lg bg-white text-indigo-600 shadow-sm transition">Grid Kehadiran</button>
+                    <button type="button" id="tab-btn-summary" onclick="switchMonthlyTab('summary')" class="py-2 text-sm font-semibold rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition">Sesi & Jam</button>
                 </div>
                 
-                <!-- TOMBOL AKSI -->
-                <div id="btn-rekap-actions" class="hidden space-y-3 mt-4 print:hidden">
-                    <div class="grid grid-cols-2 gap-3">
-                        <button type="button" onclick="cetakPDFBulananGrid()" class="w-full bg-red-600 text-white font-semibold py-2.5 rounded-xl shadow-md hover:bg-red-700 transition cursor-pointer flex flex-col justify-center items-center text-xs">
-                            <i class="fas fa-table mb-1 text-lg"></i> PDF Grid Absen
-                        </button>
-                        <button type="button" onclick="cetakPDFBulananSummary()" class="w-full bg-orange-600 text-white font-semibold py-2.5 rounded-xl shadow-md hover:bg-orange-700 transition cursor-pointer flex flex-col justify-center items-center text-xs">
-                            <i class="fas fa-list-ol mb-1 text-lg"></i> PDF Sesi & Jam
-                        </button>
-                    </div>
-                    <button type="button" onclick="cetakRekap()" class="w-full bg-green-600 text-white font-semibold py-3 rounded-xl shadow-md hover:bg-green-700 transition cursor-pointer flex justify-center items-center">
-                        <i class="fas fa-file-excel mr-2"></i> Simpan ke Google Sheets
-                    </button>
+                <!-- EMPTY STATE -->
+                <div id="monthly-empty-state" class="text-center text-gray-400 py-10 print:hidden">
+                    <i class="fas fa-search text-4xl mb-3"></i><p>Pilih bulan dan klik cari.</p>
                 </div>
+                
+                <!-- CONTENT TABS -->
+                <div id="monthly-content-grid" class="hidden"></div>
+                <div id="monthly-content-summary" class="hidden"></div>
+
             </div>
         </div>
 
@@ -516,24 +506,15 @@
         let filledJamsThisSession = [];
         let yearlyChartInstance = null;
         let guruChartInstance = null;
-        let isAppPrinting = false;
 
-        // Listener Global untuk Mereset Style/Class Print sesaat setelah Dialog Print ditutup
+        // Listener Global untuk mereset CSS tambahan sesaat setelah Print dialog ditutup
         window.addEventListener('afterprint', () => { 
-            isAppPrinting = false; 
             if(guruChartInstance) guruChartInstance.render(); 
-            
-            document.body.classList.remove('printing-monthly', 'print-mode-grid', 'print-mode-summary', 'printing-yearly');
-            
             const styleDynamic = document.getElementById('print-style-dynamic');
             if (styleDynamic) styleDynamic.remove();
-            
-            const subtitle = document.getElementById('print-subtitle');
-            if (subtitle) subtitle.innerText = "";
         });
 
         window.addEventListener('beforeprint', () => { 
-            isAppPrinting = true; 
             if(guruChartInstance) guruChartInstance.render(); 
         });
 
@@ -564,6 +545,25 @@
             
             wrapper.scrollTop = 0;
             if (viewId === 'view-input') setTanggalHariIni();
+        }
+
+        function switchMonthlyTab(tab) {
+            const btnGrid = document.getElementById('tab-btn-grid');
+            const btnSummary = document.getElementById('tab-btn-summary');
+            const contentGrid = document.getElementById('monthly-content-grid');
+            const contentSummary = document.getElementById('monthly-content-summary');
+
+            if (tab === 'grid') {
+                btnGrid.className = "py-2 text-sm font-semibold rounded-lg bg-white text-indigo-600 shadow-sm transition";
+                btnSummary.className = "py-2 text-sm font-semibold rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition";
+                contentGrid.classList.remove('hidden');
+                contentSummary.classList.add('hidden');
+            } else {
+                btnSummary.className = "py-2 text-sm font-semibold rounded-lg bg-white text-indigo-600 shadow-sm transition";
+                btnGrid.className = "py-2 text-sm font-semibold rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition";
+                contentSummary.classList.remove('hidden');
+                contentGrid.classList.add('hidden');
+            }
         }
 
         function setTanggalHariIni() {
@@ -605,7 +605,6 @@
             const container = document.getElementById('public-jadwal-container');
             if(!container) return;
 
-            // Cek apakah hari ini adalah hari Jumat (5)
             const today = new Date();
             if (today.getDay() === 5) {
                 container.innerHTML = `
@@ -616,7 +615,7 @@
                         <h4 class="font-bold text-lg tracking-wide mb-1">Jumat Mubarok</h4>
                         <p class="text-[11px] text-white text-opacity-90 leading-relaxed">Hari libur pesantren.<br>Mari perbanyak amal ibadah dan shalawat.</p>
                     </div>`;
-                return; // Hentikan eksekusi
+                return;
             }
 
             container.innerHTML = `<div class="text-center text-white text-opacity-70 text-xs py-4"><i class="fas fa-spinner fa-spin mr-2"></i>Memuat jadwal...</div>`;
@@ -1127,33 +1126,38 @@
             callAPI('getMonthlyRecap', bulan).then(res => {
                 hideLoader();
                 if (res && res.success) {
-                    const container = document.getElementById('monthly-result-container');
+                    // Sembunyikan state kosong dan tampilkan tab
+                    document.getElementById('monthly-empty-state').classList.add('hidden');
+                    document.getElementById('monthly-tabs').classList.remove('hidden');
+                    document.getElementById('monthly-tabs').classList.add('grid');
                     
                     const bulanFormat = new Date(bulan + '-01').toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
-                    let html = `<div id="print-header" class="hidden print:block w-full mb-4" style="break-after: avoid; page-break-after: avoid;">
+                    
+                    // --- MEMBUAT HTML UNTUK TAB GRID (Kiri) ---
+                    let gridHtml = `
+                    <div id="print-header-grid" class="hidden print:block w-full mb-4" style="break-after: avoid; page-break-after: avoid;">
                         <div class="flex items-center mb-4">
                             <div class="mr-4"><img src="https://i.ibb.co.com/PvyzRgq9/Logo-SMP-Unggulan-Abu-Zairi.png" alt="Logo SMP" class="w-16 h-16 object-contain"></div>
                             <div class="flex-1">
                                 <h2 class="text-xl font-bold text-gray-900 leading-tight">Rekapitulasi Kehadiran Bulanan Guru<br>SMP Unggulan Abu Zairi</h2>
                                 <p class="text-gray-800 font-semibold mt-1">Periode: ${bulanFormat}</p>
-                                <p id="print-subtitle" class="text-gray-600 text-xs font-medium uppercase tracking-wider mt-1"></p>
+                                <p class="text-gray-600 text-xs font-medium uppercase tracking-wider mt-1">Laporan Detail Grid Kehadiran Harian</p>
                             </div>
                         </div>
                         <div class="w-full border-b-2 border-gray-900"></div>
                     </div>`;
 
                     if (res.guruTeladan && res.guruTeladan.length) {
-                        html += `<div class="bg-gradient-to-r from-yellow-400 to-orange-500 p-4 rounded-xl shadow-md mb-4 text-white print:hidden"><h3 class="font-bold text-sm flex items-center"><i class="fas fa-trophy mr-2"></i> Guru Teladan Bulan Ini</h3><p class="text-[10px] opacity-90 mb-2">Hadir penuh tanpa izin/sakit/alpa.</p><div class="space-y-1">` + res.guruTeladan.map(g => `<div class="text-xs font-semibold flex items-center"><i class="fas fa-star text-yellow-200 mr-2 text-[10px]"></i> ${g}</div>`).join('') + `</div></div>`;
+                        gridHtml += `<div class="bg-gradient-to-r from-yellow-400 to-orange-500 p-4 rounded-xl shadow-md mb-4 text-white print:hidden"><h3 class="font-bold text-sm flex items-center"><i class="fas fa-trophy mr-2"></i> Guru Teladan Bulan Ini</h3><p class="text-[10px] opacity-90 mb-2">Hadir penuh tanpa izin/sakit/alpa.</p><div class="space-y-1">` + res.guruTeladan.map(g => `<div class="text-xs font-semibold flex items-center"><i class="fas fa-star text-yellow-200 mr-2 text-[10px]"></i> ${g}</div>`).join('') + `</div></div>`;
                     }
                     
-                    // --- TAMBAHAN GRID KEHADIRAN MULAI DI SINI ---
                     if (res.gridKehadiran) {
                         const parts = bulan.split("-");
                         const y = parseInt(parts[0], 10);
                         const m = parseInt(parts[1], 10);
                         const daysInMonth = new Date(y, m, 0).getDate();
                         
-                        html += `<div id="print-grid" class="bg-white border border-gray-200 p-4 rounded-xl shadow-sm mb-4 print:p-0 print:shadow-none print:border-none print:mb-0" style="break-before: avoid; page-break-before: avoid;">
+                        gridHtml += `<div class="bg-white border border-gray-200 p-4 rounded-xl shadow-sm mb-4 print:p-0 print:shadow-none print:border-none print:mb-0" style="break-before: avoid; page-break-before: avoid;">
                             <div class="flex justify-between items-center mb-2 print:hidden">
                                 <h3 class="font-bold text-sm text-gray-800">Tabel Detail Bulanan</h3>
                                 <button type="button" onclick="copyTableToClipboard('tabel-detail-bulanan')" class="text-[10px] bg-white border border-gray-200 text-gray-600 hover:bg-gray-100 px-2 py-1 rounded shadow-sm transition"><i class="fas fa-copy mr-1"></i>Salin</button>
@@ -1179,10 +1183,10 @@
                             let hasEvent = res.agendaBulanIni && res.agendaBulanIni[d];
                             let isFriday = new Date(y, m - 1, d).getDay() === 5;
                             let bgClass = isFriday ? 'bg-red-100 text-red-600 font-bold' : (hasEvent ? 'bg-amber-200 text-amber-900 font-bold' : 'bg-gray-50');
-                            html += `<th class="border border-gray-200 print:border-gray-300 py-1.5 px-1 min-w-[24px] ${bgClass}" ${hasEvent ? `title="${hasEvent}"` : ''}>${d}</th>`;
+                            gridHtml += `<th class="border border-gray-200 print:border-gray-300 py-1.5 px-1 min-w-[24px] ${bgClass}" ${hasEvent ? `title="${hasEvent}"` : ''}>${d}</th>`;
                         }
                         
-                        html += `           <th class="border border-gray-200 print:border-gray-300 py-2 px-1 min-w-[28px] bg-green-50 text-green-700">H</th>
+                        gridHtml += `       <th class="border border-gray-200 print:border-gray-300 py-2 px-1 min-w-[28px] bg-green-50 text-green-700">H</th>
                                             <th class="border border-gray-200 print:border-gray-300 py-2 px-1 min-w-[28px] bg-yellow-50 text-yellow-700">I</th>
                                             <th class="border border-gray-200 print:border-gray-300 py-2 px-1 min-w-[28px] bg-blue-50 text-blue-700">S</th>
                                             <th class="border border-gray-200 print:border-gray-300 py-2 px-1 min-w-[28px] bg-red-50 text-red-700">A</th>
@@ -1193,7 +1197,7 @@
                         let sortedGurus = Object.keys(res.gridKehadiran).sort();
                         sortedGurus.forEach(guru => {
                             let dataG = res.gridKehadiran[guru];
-                            html += `<tr class="hover:bg-gray-50 transition">
+                            gridHtml += `<tr class="hover:bg-gray-50 transition">
                                 <td class="border border-gray-200 print:border-gray-300 py-1.5 px-3 sticky left-0 bg-white z-10 text-left font-medium text-gray-700 whitespace-nowrap shadow-[2px_0_4px_rgba(0,0,0,0.05)] print:shadow-none">${guru}</td>`;
                             
                             for (let d = 1; d <= daysInMonth; d++) {
@@ -1221,12 +1225,12 @@
                                     cellClass += ' bg-red-50'; 
                                 }
                                 
-                                html += `<td class="${cellClass}" ${tooltip ? `title="${tooltip}"` : ''}>${content}</td>`;
+                                gridHtml += `<td class="${cellClass}" ${tooltip ? `title="${tooltip}"` : ''}>${content}</td>`;
                             }
                             
                             let totalIzinStr = dataG.I + dataG.DL + dataG.C;
                             
-                            html += `
+                            gridHtml += `
                                 <td class="border border-gray-200 print:border-gray-300 py-1.5 px-1 bg-green-50 font-bold text-green-700">${dataG.H}</td>
                                 <td class="border border-gray-200 print:border-gray-300 py-1.5 px-1 bg-yellow-50 font-bold text-yellow-700">${totalIzinStr}</td>
                                 <td class="border border-gray-200 print:border-gray-300 py-1.5 px-1 bg-blue-50 font-bold text-blue-700">${dataG.S}</td>
@@ -1234,11 +1238,35 @@
                             </tr>`;
                         });
 
-                        html += `</tbody></table></div></div>`;
+                        gridHtml += `</tbody></table></div></div>`;
                     }
-                    // --- TAMBAHAN GRID KEHADIRAN SELESAI ---
+                    
+                    gridHtml += `
+                    <div class="mt-4 space-y-3 print:hidden">
+                        <button type="button" onclick="cetakPDFBulananGrid()" class="w-full bg-red-600 text-white font-semibold py-3 rounded-xl shadow-md hover:bg-red-700 transition cursor-pointer flex justify-center items-center">
+                            <i class="fas fa-file-pdf mr-2"></i> Cetak PDF Kehadiran Guru (Landscape)
+                        </button>
+                        <button type="button" onclick="cetakRekap()" class="w-full bg-green-600 text-white font-semibold py-3 rounded-xl shadow-md hover:bg-green-700 transition cursor-pointer flex justify-center items-center">
+                            <i class="fas fa-file-excel mr-2"></i> Simpan ke Google Sheets
+                        </button>
+                    </div>`;
 
-                    html += `<div id="print-summary" class="bg-indigo-50 p-4 rounded-xl shadow-sm mb-4 print:bg-white print:p-0 print:shadow-none print:border-none print:mb-0" style="break-before: avoid; page-break-before: avoid;">
+
+                    // --- MEMBUAT HTML UNTUK TAB SUMMARY (Kanan) ---
+                    let summaryHtml = `
+                    <div id="print-header-summary" class="hidden print:block w-full mb-4" style="break-after: avoid; page-break-after: avoid;">
+                        <div class="flex items-center mb-4">
+                            <div class="mr-4"><img src="https://i.ibb.co.com/PvyzRgq9/Logo-SMP-Unggulan-Abu-Zairi.png" alt="Logo SMP" class="w-16 h-16 object-contain"></div>
+                            <div class="flex-1">
+                                <h2 class="text-xl font-bold text-gray-900 leading-tight">Rekapitulasi Kehadiran Bulanan Guru<br>SMP Unggulan Abu Zairi</h2>
+                                <p class="text-gray-800 font-semibold mt-1">Periode: ${bulanFormat}</p>
+                                <p class="text-gray-600 text-xs font-medium uppercase tracking-wider mt-1">Laporan Rekapitulasi Sesi & Jam Mengajar</p>
+                            </div>
+                        </div>
+                        <div class="w-full border-b-2 border-gray-900"></div>
+                    </div>`;
+
+                    summaryHtml += `<div class="bg-indigo-50 p-4 rounded-xl shadow-sm mb-4 print:bg-white print:p-0 print:shadow-none print:border-none print:mb-0" style="break-before: avoid; page-break-before: avoid;">
                         <div class="flex justify-between items-center mb-3 border-b border-indigo-200 pb-2 print:hidden">
                             <h3 class="font-bold text-sm text-indigo-800"><i class="fas fa-clipboard-list mr-2"></i>Rekap Sesi & Jam</h3>
                             <button type="button" onclick="copyTableToClipboard('tabel-gaji')" class="text-[10px] bg-white border border-indigo-200 text-indigo-600 hover:bg-indigo-600 hover:text-white px-2 py-1 rounded shadow-sm transition print:hidden"><i class="fas fa-copy mr-1"></i>Salin Excel</button>
@@ -1257,7 +1285,7 @@
                                 <tbody class="divide-y divide-gray-100">`;
                                 
                     (res.rekapGuru || []).forEach((g, i) => {
-                        html += `<tr class="hover:bg-indigo-50 transition">
+                        summaryHtml += `<tr class="hover:bg-indigo-50 transition">
                                     <td class="py-2 px-3 border border-indigo-100 print:border-gray-300 text-center text-gray-500">${i + 1}</td>
                                     <td class="py-2 px-3 border border-indigo-100 print:border-gray-300 font-medium whitespace-nowrap">${g.namaGuru}</td>
                                     <td class="py-2 px-3 border border-indigo-100 print:border-gray-300 text-center font-bold text-indigo-600">${g.totalHadir}</td>
@@ -1266,7 +1294,7 @@
                                  </tr>`;
                     });
                     
-                    html += `   </tbody>
+                    summaryHtml += `   </tbody>
                             </table>
                         </div>
                         <p class="text-[9px] text-gray-500 mt-2 text-center print:hidden"><i class="fas fa-info-circle mr-1"></i> Sesi = Jumlah Jurnal. Jam = Total Jam Pelajaran.</p>
@@ -1283,7 +1311,7 @@
                     }
                     
                     let totalSiswaAbsenUnik = Object.keys(absenMap).length;
-                    html += `<div id="print-absen-siswa" class="bg-white border border-gray-200 p-4 rounded-xl shadow-sm print:p-0 print:shadow-none print:border-none print:mt-4"><div class="flex justify-between items-center mb-3 border-b pb-1"><h3 class="font-bold text-sm text-gray-800">Siswa Tidak Hadir Bulan Ini</h3><span class="text-[10px] font-bold bg-red-100 text-red-600 px-2 py-0.5 rounded-full">Total: ${totalSiswaAbsenUnik} Anak</span></div><ul class="space-y-3">`;
+                    summaryHtml += `<div class="bg-white border border-gray-200 p-4 rounded-xl shadow-sm print:p-0 print:shadow-none print:border-none print:mt-4"><div class="flex justify-between items-center mb-3 border-b pb-1"><h3 class="font-bold text-sm text-gray-800">Siswa Tidak Hadir Bulan Ini</h3><span class="text-[10px] font-bold bg-red-100 text-red-600 px-2 py-0.5 rounded-full">Total: ${totalSiswaAbsenUnik} Anak</span></div><ul class="space-y-3">`;
                     if (totalSiswaAbsenUnik > 0) {
                         for (let namaSiswa in absenMap) {
                             let dataSiswa = absenMap[namaSiswa];
@@ -1292,13 +1320,28 @@
                             if(dataSiswa.totalSakit > 0) badgeHtml += `<span class="bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded mr-1">Sakit: ${dataSiswa.totalSakit}</span>`;
                             if(dataSiswa.totalIzin > 0) badgeHtml += `<span class="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded mr-1">Izin: ${dataSiswa.totalIzin}</span>`;
                             if(dataSiswa.totalAlpa > 0) badgeHtml += `<span class="bg-red-100 text-red-700 px-1.5 py-0.5 rounded">Alpa: ${dataSiswa.totalAlpa}</span>`;
-                            html += `<li class="flex flex-col text-xs border-b border-gray-50 pb-2 last:border-0"><div class="flex justify-between items-center mb-1"><span class="font-semibold text-gray-700">${namaSiswa} <span class="font-normal text-[10px] text-gray-400">(${dataSiswa.kelas})</span></span><span class="text-[10px] font-bold text-red-500">${totalAbsenSiswa}x Absen</span></div><div class="text-[9px] font-bold flex mt-1">${badgeHtml}</div></li>`;
+                            summaryHtml += `<li class="flex flex-col text-xs border-b border-gray-50 pb-2 last:border-0"><div class="flex justify-between items-center mb-1"><span class="font-semibold text-gray-700">${namaSiswa} <span class="font-normal text-[10px] text-gray-400">(${dataSiswa.kelas})</span></span><span class="text-[10px] font-bold text-red-500">${totalAbsenSiswa}x Absen</span></div><div class="text-[9px] font-bold flex mt-1">${badgeHtml}</div></li>`;
                         }
-                    } else { html += '<li class="text-center text-green-500 text-xs py-2"><i class="fas fa-check-circle mr-1"></i> Semua siswa hadir penuh bulan ini.</li>'; }
-                    html += `</ul></div>`;
+                    } else { summaryHtml += '<li class="text-center text-green-500 text-xs py-2"><i class="fas fa-check-circle mr-1"></i> Semua siswa hadir penuh bulan ini.</li>'; }
+                    summaryHtml += `</ul></div>`;
+
+                    summaryHtml += `
+                    <div class="mt-4 space-y-3 print:hidden">
+                        <button type="button" onclick="cetakPDFBulananSummary()" class="w-full bg-orange-600 text-white font-semibold py-3 rounded-xl shadow-md hover:bg-orange-700 transition cursor-pointer flex justify-center items-center">
+                            <i class="fas fa-file-pdf mr-2"></i> Cetak PDF Sesi & Jam Guru (Portrait)
+                        </button>
+                        <button type="button" onclick="cetakRekap()" class="w-full bg-green-600 text-white font-semibold py-3 rounded-xl shadow-md hover:bg-green-700 transition cursor-pointer flex justify-center items-center">
+                            <i class="fas fa-file-excel mr-2"></i> Simpan ke Google Sheets
+                        </button>
+                    </div>`;
+
+                    // Masukkan ke DOM masing-masing tab
+                    document.getElementById('monthly-content-grid').innerHTML = gridHtml;
+                    document.getElementById('monthly-content-summary').innerHTML = summaryHtml;
                     
-                    container.innerHTML = html;
-                    document.getElementById('btn-rekap-actions').classList.remove('hidden');
+                    // Aktifkan default tab pertama (Grid)
+                    switchMonthlyTab('grid');
+
                 } else showToast("Gagal memuat rekap.");
             }).catch(() => { hideLoader(); showToast("Koneksi gagal."); });
         }
@@ -1307,14 +1350,7 @@
         // FUNGSI PRINT PDF GRID (LANDSCAPE)
         // =======================================================
         function cetakPDFBulananGrid() {
-            const subtitle = document.getElementById('print-subtitle');
-            if (subtitle) subtitle.innerText = "Laporan Detail Grid Kehadiran Harian";
-            
-            // Hapus CSS print mode lain jika ada, lalu tambahkan mode grid
-            document.body.classList.remove('print-mode-summary', 'printing-yearly');
-            document.body.classList.add('printing-monthly', 'print-mode-grid');
-            
-            // Suntik ukuran kertas ke CSS khusus saat diprint
+            // Karena tab summary "hidden" via Tailwind (display:none), window.print() hanya akan mencetak tab Grid.
             let style = document.getElementById('print-style-dynamic');
             if (!style) {
                 style = document.createElement('style');
@@ -1323,7 +1359,6 @@
             }
             style.innerHTML = '@media print { @page { size: A4 landscape; margin: 10mm; } }';
             
-            // Beri sedikit waktu untuk browser menerapkan CSS, lalu print
             setTimeout(() => {
                 window.print();
             }, 50);
@@ -1333,13 +1368,7 @@
         // FUNGSI PRINT PDF SUMMARY (PORTRAIT)
         // =======================================================
         function cetakPDFBulananSummary() {
-            const subtitle = document.getElementById('print-subtitle');
-            if (subtitle) subtitle.innerText = "Laporan Rekapitulasi Sesi & Jam Mengajar";
-            
-            // Hapus CSS print mode lain jika ada, lalu tambahkan mode summary
-            document.body.classList.remove('print-mode-grid', 'printing-yearly');
-            document.body.classList.add('printing-monthly', 'print-mode-summary');
-            
+            // Karena tab grid "hidden" via Tailwind (display:none), window.print() hanya akan mencetak tab Summary.
             let style = document.getElementById('print-style-dynamic');
             if (!style) {
                 style = document.createElement('style');
@@ -1357,7 +1386,6 @@
         // FUNGSI PRINT TAHUNAN
         // =======================================================
         function cetakPDFTahunan() {
-            document.body.classList.remove('printing-monthly', 'print-mode-grid', 'print-mode-summary');
             document.body.classList.add('printing-yearly');
             
             let style = document.getElementById('print-style-dynamic');
@@ -1370,6 +1398,7 @@
             
             setTimeout(() => {
                 window.print();
+                document.body.classList.remove('printing-yearly');
             }, 50);
         }
 
