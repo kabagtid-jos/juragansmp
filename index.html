@@ -1161,8 +1161,8 @@
                                 <span class="font-bold text-red-600">A = Alpa</span>
                                 <span class="font-bold text-purple-600">DL = Dinas Luar</span>
                                 <span class="font-bold text-gray-600">C = Cuti</span>
-                                <span class="flex items-center ml-2"><span class="w-3 h-3 bg-red-50 border border-red-100 inline-block mr-1"></span> Libur (Jumat)</span>
-                                <span class="flex items-center ml-2"><span class="w-3 h-3 bg-amber-100 border border-amber-300 inline-block mr-1"></span> Agenda Sekolah</span>
+                                <span class="flex items-center ml-2"><span class="w-3 h-3 bg-red-50 border border-red-100 inline-block mr-1"></span> Libur</span>
+                                <span class="flex items-center ml-2"><span class="w-3 h-3 bg-amber-100 border border-amber-300 inline-block mr-1"></span><span class="font-bold text-amber-600">AG = Agenda (Event)</span></span>
                             </div>
                             <div class="overflow-x-auto custom-scrollbar border border-gray-200 rounded-lg shadow-inner">
                                 <table id="tabel-detail-bulanan" class="min-w-full text-[10px] text-center border-collapse">
@@ -1175,42 +1175,18 @@
                             let hasEvent = res.agendaBulanIni && res.agendaBulanIni[d];
                             let isFriday = new Date(y, m - 1, d).getDay() === 5;
                             let bgClass = isFriday ? 'bg-red-100 text-red-600 font-bold' : (hasEvent ? 'bg-amber-200 text-amber-900 font-bold' : 'bg-gray-50');
-                            html += `<th class="border border-gray-200 py-1.5 px-1 min-w-[24px] ${bgClass}">${d}</th>`;
+                            html += `<th class="border border-gray-200 py-1.5 px-1 min-w-[24px] ${bgClass}" ${hasEvent ? `title="${hasEvent}"` : ''}>${d}</th>`;
                         }
                         
                         html += `           <th class="border border-gray-200 py-2 px-1 min-w-[28px] bg-green-50 text-green-700">H</th>
                                             <th class="border border-gray-200 py-2 px-1 min-w-[28px] bg-yellow-50 text-yellow-700">I</th>
                                             <th class="border border-gray-200 py-2 px-1 min-w-[28px] bg-blue-50 text-blue-700">S</th>
                                             <th class="border border-gray-200 py-2 px-1 min-w-[28px] bg-red-50 text-red-700">A</th>
-                                        </tr>`;
-
-                        // 2. BARIS AGENDA SEKOLAH
-                        html += `       <tr class="bg-gray-50">
-                                            <th class="border border-gray-200 py-2 px-3 sticky left-0 bg-gray-50 z-10 text-left text-gray-700 shadow-[2px_0_4px_rgba(0,0,0,0.05)] font-bold text-[10px]">
-                                                <i class="fas fa-calendar-alt mr-1 text-gray-400 print:hidden"></i> Agenda
-                                            </th>`;
-                        
-                        for (let d = 1; d <= daysInMonth; d++) {
-                            let ev = res.agendaBulanIni && res.agendaBulanIni[d];
-                            let isFriday = new Date(y, m - 1, d).getDay() === 5;
-                            let bgClass = isFriday ? 'bg-red-50' : (ev ? 'bg-amber-100' : 'bg-gray-50');
-                            
-                            if (ev) {
-                                // Teks horizontal diputar vertikal. Membuang batasan tinggi agar tabel otomatis memanjang.
-                                html += `   <th class="border border-gray-200 ${bgClass} align-bottom p-1" title="${ev}">
-                                                <div style="writing-mode: vertical-rl; transform: rotate(180deg);" class="mx-auto text-[9px] font-bold text-amber-900 py-1 whitespace-nowrap tracking-wide">${ev}</div>
-                                            </th>`;
-                            } else {
-                                html += `   <th class="border border-gray-200 ${bgClass}"></th>`;
-                            }
-                        }
-
-                        html += `           <th colspan="4" class="border border-gray-200 bg-gray-50"></th>
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-gray-100">`;
 
-                        // 3. BARIS SEL DATA GURU
+                        // 2. BARIS SEL DATA GURU
                         let sortedGurus = Object.keys(res.gridKehadiran).sort();
                         sortedGurus.forEach(guru => {
                             let dataG = res.gridKehadiran[guru];
@@ -1224,24 +1200,26 @@
                                 
                                 let cellClass = 'border border-gray-200';
                                 let content = '';
+                                let tooltip = '';
                                 
-                                // Jika ada isi absensi
+                                // Jika ada isi absensi, utamakan itu. Jika tidak, tampilkan AG jika ada event.
                                 if (status === 'v') { content = 'v'; cellClass += ' bg-green-100 text-green-700 font-bold'; }
                                 else if (status === 'S') { content = 'S'; cellClass += ' bg-blue-100 text-blue-700 font-bold'; }
                                 else if (status === 'I') { content = 'I'; cellClass += ' bg-yellow-100 text-yellow-700 font-bold'; }
                                 else if (status === 'A') { content = 'A'; cellClass += ' bg-red-100 text-red-700 font-bold'; }
                                 else if (status === 'DL') { content = 'DL'; cellClass += ' bg-purple-100 text-purple-700 font-bold'; }
                                 else if (status === 'C') { content = 'C'; cellClass += ' bg-gray-200 text-gray-700 font-bold'; }
-                                else {
-                                    // Kolom kosong, maka warnai seluruh kolom sesuai event / libur
-                                    if (isFriday) {
-                                        cellClass += ' bg-red-50';
-                                    } else if (hasEvent) {
-                                        cellClass += ' bg-amber-50';
-                                    }
+                                else if (hasEvent) { 
+                                    content = 'AG'; 
+                                    cellClass += ' bg-amber-100 text-amber-700 font-bold'; 
+                                    tooltip = hasEvent; // Memunculkan judul agenda saat mouse ditahan di atas sel
+                                }
+                                else if (isFriday) { 
+                                    content = ''; 
+                                    cellClass += ' bg-red-50'; 
                                 }
                                 
-                                html += `<td class="${cellClass}">${content}</td>`;
+                                html += `<td class="${cellClass}" ${tooltip ? `title="${tooltip}"` : ''}>${content}</td>`;
                             }
                             
                             let totalIzinStr = dataG.I + dataG.DL + dataG.C;
@@ -1258,7 +1236,7 @@
                     }
                     // --- TAMBAHAN GRID KEHADIRAN SELESAI ---
 
-                    html += `<div id="print-summary" class="bg-indigo-50 p-4 rounded-xl shadow-sm mb-4" style="page-break-before: auto; page-break-inside: auto;">
+                    html += `<div id="print-summary" class="bg-indigo-50 p-4 rounded-xl shadow-sm mb-4" style="page-break-inside: auto;">
                         <div class="flex justify-between items-center mb-3 border-b border-indigo-200 pb-2">
                             <h3 class="font-bold text-sm text-indigo-800"><i class="fas fa-clipboard-list mr-2"></i>Rekap Sesi & Jam</h3>
                             <button type="button" onclick="copyTableToClipboard('tabel-gaji')" class="text-[10px] bg-white border border-indigo-200 text-indigo-600 hover:bg-indigo-600 hover:text-white px-2 py-1 rounded shadow-sm transition print:hidden"><i class="fas fa-copy mr-1"></i>Salin Excel</button>
