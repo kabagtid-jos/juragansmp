@@ -56,22 +56,16 @@
         html.dark .bg-teal-50 { background-color: rgba(20, 184, 166, 0.1) !important; border-color: rgba(20, 184, 166, 0.2) !important; }
         html.dark #view-login { background: linear-gradient(to bottom right, #4f46e5, #9333ea) !important; }
         
-        /* =======================================================
-           PENGATURAN CETAK (PRINT) - SEDERHANA & KUAT
-           ======================================================= */
+        /* PENGATURAN CETAK (PRINT) */
         @media print {
             .page-break { page-break-after: always !important; break-after: page !important; }
             html, body { height: auto !important; overflow: visible !important; background-color: #ffffff !important; margin: 0 !important; padding: 0 !important; }
             #app-wrapper { max-width: 100% !important; width: 100% !important; height: auto !important; overflow: visible !important; background: #ffffff !important; box-shadow: none !important; position: static !important; display: block !important; }
             
-            /* Sembunyikan SEMUA elemen selain view yang sedang aktif */
             .app-view:not(.active) { display: none !important; }
             .app-view.active { display: block !important; padding: 0 !important; background: #ffffff !important; }
             
-            /* Menghilangkan scroll saat print */
             .overflow-x-auto { overflow: visible !important; }
-            
-            /* Menjaga styling warna saat print */
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             
             h3 { page-break-after: avoid; }
@@ -81,7 +75,6 @@
             tr { page-break-inside: avoid; page-break-after: auto; }
             td, th { word-wrap: break-word; }
             
-            /* Khusus Tahunan agar detail guru tampil */
             #print-all-gurus-container { display: block !important; }
             #single-guru-container { display: none !important; }
         }
@@ -91,31 +84,31 @@
 
     <!-- GLOBAL LOADER -->
     <div id="loadingOverlay" class="fixed inset-0 bg-white bg-opacity-80 z-[100] flex flex-col justify-center items-center hidden">
-        <div class="loader mb-3" style="width: 40px; height: 40px;"></div>
-        <p class="text-indigo-600 font-medium animate-pulse" id="loadingText">Memproses...</p>
+        <div class="loader mb-2" style="width: 32px; height: 32px; border-width: 3px;"></div>
+        <p class="text-indigo-600 font-medium animate-pulse text-sm" id="loadingText">Memproses...</p>
     </div>
 
     <!-- TOAST -->
-    <div id="toast" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-[100] bg-gray-800 text-white px-6 py-3 rounded-xl shadow-lg hidden transition-opacity duration-300 opacity-0 text-sm font-medium w-max max-w-[90%] text-center">
+    <div id="toast" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-[100] bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg hidden transition-opacity duration-300 opacity-0 text-xs font-medium w-max max-w-[85%] text-center">
         <span id="toast-message">Pesan</span>
     </div>
 
     <!-- AGENDA MODAL -->
     <div id="agendaModal" class="fixed inset-0 bg-black bg-opacity-60 z-[110] flex items-center justify-center hidden opacity-0 transition-opacity duration-300 px-4">
-        <div class="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl transform scale-95 transition-transform duration-300 relative">
-            <div class="bg-gradient-to-r from-teal-500 to-emerald-600 p-6 text-center text-white relative">
-                <button type="button" onclick="closeAgendaModal()" class="absolute top-3 right-3 text-white hover:text-gray-200"><i class="fas fa-times text-lg"></i></button>
-                <div class="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-3 shadow-inner">
-                    <i class="fas fa-bell text-3xl text-white animate-wiggle"></i>
+        <div class="bg-white rounded-xl w-full max-w-xs overflow-hidden shadow-2xl transform scale-95 transition-transform duration-300 relative">
+            <div class="bg-gradient-to-r from-teal-500 to-emerald-600 px-4 py-4 text-center text-white relative">
+                <button type="button" onclick="closeAgendaModal()" class="absolute top-2.5 right-3 text-white hover:text-gray-200"><i class="fas fa-times text-base"></i></button>
+                <div class="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-2 shadow-inner">
+                    <i class="fas fa-bell text-2xl text-white animate-wiggle"></i>
                 </div>
-                <h2 class="text-xl font-bold leading-tight">Agenda Hari Ini!</h2>
-                <p class="text-xs text-teal-100 mt-1" id="agenda-modal-date"></p>
+                <h2 class="text-lg font-bold leading-tight">Agenda Hari Ini!</h2>
+                <p class="text-[10px] text-teal-100 mt-0.5" id="agenda-modal-date"></p>
             </div>
-            <div class="p-5 max-h-60 overflow-y-auto custom-scrollbar bg-gray-50" id="agenda-modal-content">
+            <div class="p-4 max-h-48 overflow-y-auto custom-scrollbar bg-gray-50" id="agenda-modal-content">
                 <!-- Agenda items injected here -->
             </div>
-            <div class="p-4 bg-white border-t border-gray-100">
-                <button type="button" onclick="closeAgendaModal()" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-2.5 rounded-xl transition text-sm">Tutup</button>
+            <div class="p-3 bg-white border-t border-gray-100">
+                <button type="button" onclick="closeAgendaModal()" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-2 rounded-lg transition text-xs">Tutup</button>
             </div>
         </div>
     </div>
@@ -156,7 +149,7 @@
                     </form>
                 </div>
                 <div class="w-full">
-                    <h3 class="text-white text-sm font-semibold mb-3 flex items-center"><i class="fas fa-calendar-day mr-2 opacity-80"></i> Jadwal Guru Hari Ini</h3>
+                    <h3 id="login-jadwal-title" class="text-white text-sm font-semibold mb-3 flex items-center"><i class="fas fa-calendar-day mr-2 opacity-80"></i> Jadwal Guru Hari Ini</h3>
                     <div id="public-jadwal-container" class="space-y-2 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
                         <div class="text-center text-white text-opacity-70 text-xs py-4"><i class="fas fa-spinner fa-spin mr-2"></i>Memuat jadwal...</div>
                     </div>
@@ -603,9 +596,18 @@
 
         function loadPublicJadwal() {
             const container = document.getElementById('public-jadwal-container');
+            const titleEl = document.getElementById('login-jadwal-title');
             if(!container) return;
 
             const today = new Date();
+            
+            // Format & Tampilkan Tanggal Hari Ini di Judul Jadwal
+            if (titleEl) {
+                const options = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+                const formattedDate = today.toLocaleDateString('id-ID', options);
+                titleEl.innerHTML = `<i class="fas fa-calendar-day mr-2 opacity-80"></i> Jadwal Guru Hari Ini [${formattedDate}]`;
+            }
+
             if (today.getDay() === 5) {
                 container.innerHTML = `
                     <div class="bg-white bg-opacity-20 backdrop-blur-md border border-white border-opacity-30 p-5 rounded-2xl text-white shadow-lg text-center transform transition duration-500 hover:scale-[1.02]">
@@ -924,9 +926,9 @@
             dateEl.innerText = today.toLocaleDateString('id-ID', options);
             
             content.innerHTML = agendas.map(a => `
-                <div class="mb-3 last:mb-0 bg-white p-3 rounded-lg border-l-4 border-teal-500 shadow-sm text-left">
-                    <h4 class="font-bold text-gray-800 text-sm">${a.judul}</h4>
-                    ${a.keterangan ? `<p class="text-xs text-gray-600 mt-1 leading-relaxed">${a.keterangan}</p>` : ''}
+                <div class="mb-2 last:mb-0 bg-white p-2.5 rounded-lg border-l-4 border-teal-500 shadow-sm text-left">
+                    <h4 class="font-bold text-gray-800 text-[11px] leading-tight">${a.judul}</h4>
+                    ${a.keterangan ? `<p class="text-[10px] text-gray-600 mt-0.5 leading-snug">${a.keterangan}</p>` : ''}
                 </div>
             `).join('');
             
@@ -1350,7 +1352,6 @@
         // FUNGSI PRINT PDF GRID (LANDSCAPE)
         // =======================================================
         function cetakPDFBulananGrid() {
-            // Karena tab summary "hidden" via Tailwind (display:none), window.print() hanya akan mencetak tab Grid.
             let style = document.getElementById('print-style-dynamic');
             if (!style) {
                 style = document.createElement('style');
@@ -1368,7 +1369,6 @@
         // FUNGSI PRINT PDF SUMMARY (PORTRAIT)
         // =======================================================
         function cetakPDFBulananSummary() {
-            // Karena tab grid "hidden" via Tailwind (display:none), window.print() hanya akan mencetak tab Summary.
             let style = document.getElementById('print-style-dynamic');
             if (!style) {
                 style = document.createElement('style');
