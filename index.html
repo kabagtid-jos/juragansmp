@@ -55,20 +55,30 @@
         html.dark .bg-red-50 { background-color: rgba(239, 68, 68, 0.1) !important; border-color: rgba(239, 68, 68, 0.2) !important; }
         html.dark .bg-teal-50 { background-color: rgba(20, 184, 166, 0.1) !important; border-color: rgba(20, 184, 166, 0.2) !important; }
         html.dark #view-login { background: linear-gradient(to bottom right, #4f46e5, #9333ea) !important; }
+        
+        /* PENGATURAN CETAK (PRINT) */
         @media print {
             .page-break { page-break-after: always !important; break-after: page !important; }
             .print-page-1 { page-break-after: always !important; break-after: page !important; }
-            @page { size: A4 portrait; margin: 15mm; }
             html, body { height: auto !important; overflow: visible !important; background-color: #ffffff !important; }
             #app-wrapper { max-width: 100% !important; width: 100% !important; height: auto !important; overflow: visible !important; background: #ffffff !important; box-shadow: none !important; position: static !important; }
-            .app-view:not(#view-recap-yearly) { display: none !important; }
-            #view-recap-yearly { display: block !important; background: #ffffff !important; }
-            #print-all-gurus-container { display: block !important; }
-            #single-guru-container { display: none !important; }
+            
+            /* Dynamic visibility based on print type */
+            body.printing-yearly .app-view:not(#view-recap-yearly) { display: none !important; }
+            body.printing-yearly #view-recap-yearly { display: block !important; background: #ffffff !important; }
+            body.printing-yearly #print-all-gurus-container { display: block !important; }
+            body.printing-yearly #single-guru-container { display: none !important; }
+
+            body.printing-monthly .app-view:not(#view-recap-monthly) { display: none !important; }
+            body.printing-monthly #view-recap-monthly { display: block !important; background: #ffffff !important; padding: 0 !important; }
+            body.printing-monthly .overflow-x-auto { overflow: visible !important; }
+            
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             h3 { page-break-after: avoid; }
             .bg-white, .glass-card, canvas { page-break-inside: avoid; }
             .guru-print-block { page-break-inside: avoid; margin-bottom: 20px; }
+            table { page-break-inside: auto; }
+            tr { page-break-inside: avoid; page-break-after: auto; }
         }
     </style>
 </head>
@@ -410,22 +420,28 @@
         </div>
 
         <!-- 4. REKAP BULANAN -->
-        <div id="view-recap-monthly" class="app-view bg-gray-50">
-            <div class="bg-white shadow-sm px-4 py-4 flex items-center sticky top-0 z-10 flex-shrink-0">
+        <div id="view-recap-monthly" class="app-view bg-gray-50 print:bg-white">
+            <div class="bg-white shadow-sm px-4 py-4 flex items-center sticky top-0 z-10 flex-shrink-0 print:hidden">
                 <button type="button" onclick="switchView('view-dashboard')" class="text-gray-600 hover:text-indigo-600 p-2"><i class="fas fa-arrow-left text-lg"></i></button>
                 <h2 class="ml-3 font-semibold text-gray-800">Rekap Kehadiran</h2>
             </div>
-            <div class="p-6 pb-20">
-                <div class="flex space-x-2 mb-6">
+            <div class="p-6 pb-20 print:p-0">
+                <div class="flex space-x-2 mb-6 print:hidden">
                     <input type="month" id="filter-month" class="flex-1 p-3 border border-gray-300 rounded-xl focus:outline-none focus:border-indigo-500">
                     <button type="button" onclick="loadMonthlyRecap()" class="bg-indigo-600 text-white px-4 rounded-xl shadow hover:bg-indigo-700"><i class="fas fa-search"></i></button>
                 </div>
                 <div id="monthly-result-container" class="space-y-4 pb-4">
                     <div class="text-center text-gray-400 py-10"><i class="fas fa-search text-4xl mb-3"></i><p>Pilih bulan dan klik cari.</p></div>
                 </div>
-                <button id="btn-cetak-rekap" type="button" onclick="cetakRekap()" class="w-full mt-2 bg-green-600 text-white font-semibold py-3 rounded-xl shadow-md hover:bg-green-700 transition hidden cursor-pointer">
-                    <i class="fas fa-file-excel mr-2"></i> Cetak Jurnal Bulan Ini
-                </button>
+                
+                <div id="btn-rekap-actions" class="hidden space-y-3 mt-4 print:hidden">
+                    <button type="button" onclick="cetakPDFBulanan()" class="w-full bg-red-600 text-white font-semibold py-3 rounded-xl shadow-md hover:bg-red-700 transition cursor-pointer flex justify-center items-center">
+                        <i class="fas fa-file-pdf mr-2"></i> Preview & Download PDF (A4 Landscape)
+                    </button>
+                    <button type="button" onclick="cetakRekap()" class="w-full bg-green-600 text-white font-semibold py-3 rounded-xl shadow-md hover:bg-green-700 transition cursor-pointer flex justify-center items-center">
+                        <i class="fas fa-file-excel mr-2"></i> Simpan ke Google Sheets
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -448,8 +464,8 @@
                     <button type="button" onclick="loadYearlyRecap()" class="bg-indigo-600 text-white px-4 rounded-xl shadow hover:bg-indigo-700"><i class="fas fa-search"></i></button>
                 </div>
                 <div id="yearly-result-container" class="pb-4 print:pb-0"></div>
-                <button id="btn-print-yearly" type="button" onclick="window.print()" class="w-full mt-4 bg-red-600 text-white font-semibold py-3 rounded-xl shadow-md hover:bg-red-700 transition hidden cursor-pointer print:hidden">
-                    <i class="fas fa-file-pdf mr-2"></i> Cetak Jurnal Tahun Ini (PDF A4)
+                <button id="btn-print-yearly" type="button" onclick="cetakPDFTahunan()" class="w-full mt-4 bg-red-600 text-white font-semibold py-3 rounded-xl shadow-md hover:bg-red-700 transition hidden cursor-pointer print:hidden">
+                    <i class="fas fa-file-pdf mr-2"></i> Cetak Jurnal Tahun Ini (PDF A4 Portrait)
                 </button>
             </div>
         </div>
@@ -461,7 +477,7 @@
         // PENGATURAN API GOOGLE APPS SCRIPT
         // =========================================================================
         // Menggunakan URL Web App GAS terbaru sesuai permintaan
-        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxqp8InH7tqCka8C4HBTcOcwB4RLWp9c11D3roBA6UQvLpg3lcdSrVMQAnAM7k37DFyag/exec";
+        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbwxTe7wPWXqjqBEl5CrdsZgF8l6nwVER2NY_8QcuKnHWI99ED8lcnZNuvN6VP85sWyBWg/exec";
 
         // Fungsi pembungkus untuk memanggil Google Apps Script API via fetch()
         function callAPI(action, payload = null) {
@@ -1092,36 +1108,118 @@
                 hideLoader();
                 if (res && res.success) {
                     const container = document.getElementById('monthly-result-container');
-                    let html = '';
+                    
+                    // Membuat Header untuk versi Cetak (Kop Surat)
+                    const bulanFormat = new Date(bulan + '-01').toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+                    let html = `<div class="hidden print:flex print:items-center print:mb-4"><div class="mr-4"><img src="https://i.ibb.co.com/PvyzRgq9/Logo-SMP-Unggulan-Abu-Zairi.png" alt="Logo SMP" class="w-16 h-16 object-contain"></div><div class="flex-1"><h2 class="text-xl font-bold text-gray-900 leading-tight">Rekapitulasi Kehadiran Bulanan Guru<br>SMP Unggulan Abu Zairi</h2><p class="text-gray-800 font-semibold mt-1">Periode: ${bulanFormat}</p></div></div><div class="hidden print:block w-full border-b-2 border-gray-900 mb-4"></div>`;
+
                     if (res.guruTeladan && res.guruTeladan.length) {
-                        html += `<div class="bg-gradient-to-r from-yellow-400 to-orange-500 p-4 rounded-xl shadow-md mb-4 text-white"><h3 class="font-bold text-sm flex items-center"><i class="fas fa-trophy mr-2"></i> Guru Teladan Bulan Ini</h3><p class="text-[10px] opacity-90 mb-2">Hadir penuh tanpa izin/sakit/alpa.</p><div class="space-y-1">` + res.guruTeladan.map(g => `<div class="text-xs font-semibold flex items-center"><i class="fas fa-star text-yellow-200 mr-2 text-[10px]"></i> ${g}</div>`).join('') + `</div></div>`;
+                        html += `<div class="bg-gradient-to-r from-yellow-400 to-orange-500 p-4 rounded-xl shadow-md mb-4 text-white print:hidden"><h3 class="font-bold text-sm flex items-center"><i class="fas fa-trophy mr-2"></i> Guru Teladan Bulan Ini</h3><p class="text-[10px] opacity-90 mb-2">Hadir penuh tanpa izin/sakit/alpa.</p><div class="space-y-1">` + res.guruTeladan.map(g => `<div class="text-xs font-semibold flex items-center"><i class="fas fa-star text-yellow-200 mr-2 text-[10px]"></i> ${g}</div>`).join('') + `</div></div>`;
                     }
                     
-                    html += `<div class="bg-indigo-50 p-4 rounded-xl shadow-sm mb-4">
+                    // --- TAMBAHAN GRID KEHADIRAN MULAI DI SINI ---
+                    if (res.gridKehadiran) {
+                        const parts = bulan.split("-");
+                        const y = parseInt(parts[0], 10);
+                        const m = parseInt(parts[1], 10);
+                        const daysInMonth = new Date(y, m, 0).getDate();
+                        
+                        html += `<div class="bg-white border border-gray-200 p-4 rounded-xl shadow-sm mb-4">
+                            <div class="flex justify-between items-center mb-2">
+                                <h3 class="font-bold text-sm text-gray-800">Tabel Detail Bulanan</h3>
+                                <button type="button" onclick="copyTableToClipboard('tabel-detail-bulanan')" class="text-[10px] bg-white border border-gray-200 text-gray-600 hover:bg-gray-100 px-2 py-1 rounded shadow-sm transition print:hidden"><i class="fas fa-copy mr-1"></i>Salin</button>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2 text-[10px] mb-3 p-2 bg-blue-50 text-blue-800 rounded-lg border border-blue-100">
+                                <span class="font-bold"><i class="fas fa-info-circle mr-1"></i>Petunjuk:</span>
+                                <span class="font-bold text-green-600">v = Hadir</span>
+                                <span class="font-bold text-yellow-600">I = Izin</span>
+                                <span class="font-bold text-blue-600">S = Sakit</span>
+                                <span class="font-bold text-red-600">A = Alpa</span>
+                                <span class="font-bold text-purple-600">DL = Dinas Luar</span>
+                                <span class="font-bold text-gray-600">C = Cuti</span>
+                                <span class="flex items-center ml-2"><span class="w-3 h-3 bg-red-50 border border-red-100 inline-block mr-1"></span> Libur (Jumat)</span>
+                            </div>
+                            <div class="overflow-x-auto custom-scrollbar border border-gray-200 rounded-lg shadow-inner">
+                                <table id="tabel-detail-bulanan" class="min-w-full text-[10px] text-center border-collapse">
+                                    <thead>
+                                        <tr class="bg-gray-100 text-gray-700">
+                                            <th class="border border-gray-200 py-2 px-3 sticky left-0 bg-gray-100 z-10 min-w-[120px] text-left shadow-[2px_0_4px_rgba(0,0,0,0.05)]">Nama Guru</th>`;
+                                            
+                        for (let d = 1; d <= daysInMonth; d++) {
+                            let isFriday = new Date(y, m - 1, d).getDay() === 5;
+                            let bgClass = isFriday ? 'bg-red-100 text-red-600 font-bold' : 'bg-gray-50';
+                            html += `<th class="border border-gray-200 py-1.5 px-1 min-w-[24px] ${bgClass}">${d}</th>`;
+                        }
+                        
+                        html += `           <th class="border border-gray-200 py-2 px-1 min-w-[28px] bg-green-50 text-green-700">H</th>
+                                            <th class="border border-gray-200 py-2 px-1 min-w-[28px] bg-yellow-50 text-yellow-700">I</th>
+                                            <th class="border border-gray-200 py-2 px-1 min-w-[28px] bg-blue-50 text-blue-700">S</th>
+                                            <th class="border border-gray-200 py-2 px-1 min-w-[28px] bg-red-50 text-red-700">A</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-100">`;
+
+                        let sortedGurus = Object.keys(res.gridKehadiran).sort();
+                        sortedGurus.forEach(guru => {
+                            let dataG = res.gridKehadiran[guru];
+                            html += `<tr class="hover:bg-gray-50 transition">
+                                <td class="border border-gray-200 py-1.5 px-3 sticky left-0 bg-white z-10 text-left font-medium text-gray-700 whitespace-nowrap shadow-[2px_0_4px_rgba(0,0,0,0.05)]">${guru}</td>`;
+                            
+                            for (let d = 1; d <= daysInMonth; d++) {
+                                let status = dataG.detail[d];
+                                let isFriday = new Date(y, m - 1, d).getDay() === 5;
+                                let cellClass = isFriday ? 'bg-red-50 border border-gray-200' : 'border border-gray-200';
+                                let content = '';
+                                
+                                if (status === 'v') { content = 'v'; cellClass += ' bg-green-100 text-green-700 font-bold'; }
+                                else if (status === 'S') { content = 'S'; cellClass += ' bg-blue-100 text-blue-700 font-bold'; }
+                                else if (status === 'I') { content = 'I'; cellClass += ' bg-yellow-100 text-yellow-700 font-bold'; }
+                                else if (status === 'A') { content = 'A'; cellClass += ' bg-red-100 text-red-700 font-bold'; }
+                                else if (status === 'DL') { content = 'DL'; cellClass += ' bg-purple-100 text-purple-700 font-bold'; }
+                                else if (status === 'C') { content = 'C'; cellClass += ' bg-gray-200 text-gray-700 font-bold'; }
+                                
+                                html += `<td class="${cellClass}">${content}</td>`;
+                            }
+                            
+                            let totalIzinStr = dataG.I + dataG.DL + dataG.C;
+                            
+                            html += `
+                                <td class="border border-gray-200 py-1.5 px-1 bg-green-50 font-bold text-green-700">${dataG.H}</td>
+                                <td class="border border-gray-200 py-1.5 px-1 bg-yellow-50 font-bold text-yellow-700">${totalIzinStr}</td>
+                                <td class="border border-gray-200 py-1.5 px-1 bg-blue-50 font-bold text-blue-700">${dataG.S}</td>
+                                <td class="border border-gray-200 py-1.5 px-1 bg-red-50 font-bold text-red-700">${dataG.A}</td>
+                            </tr>`;
+                        });
+
+                        html += `</tbody></table></div></div>`;
+                    }
+                    // --- TAMBAHAN GRID KEHADIRAN SELESAI ---
+
+                    html += `<div class="bg-indigo-50 p-4 rounded-xl shadow-sm mb-4 page-break">
                         <div class="flex justify-between items-center mb-3 border-b border-indigo-200 pb-2">
                             <h3 class="font-bold text-sm text-indigo-800"><i class="fas fa-clipboard-list mr-2"></i>Rekap Sesi & Jam</h3>
-                            <button type="button" onclick="copyTableToClipboard('tabel-gaji')" class="text-[10px] bg-white border border-indigo-200 text-indigo-600 hover:bg-indigo-600 hover:text-white px-2 py-1 rounded shadow-sm transition"><i class="fas fa-copy mr-1"></i>Salin Excel</button>
+                            <button type="button" onclick="copyTableToClipboard('tabel-gaji')" class="text-[10px] bg-white border border-indigo-200 text-indigo-600 hover:bg-indigo-600 hover:text-white px-2 py-1 rounded shadow-sm transition print:hidden"><i class="fas fa-copy mr-1"></i>Salin Excel</button>
                         </div>
                         <div class="overflow-x-auto rounded-lg border border-indigo-100 shadow-sm custom-scrollbar">
-                            <table id="tabel-gaji" class="min-w-full bg-white text-left text-xs text-gray-700">
+                            <table id="tabel-gaji" class="min-w-full bg-white text-left text-xs text-gray-700 border-collapse">
                                 <thead class="bg-indigo-100 text-indigo-800">
                                     <tr>
-                                        <th class="py-2 px-3 font-semibold border-b border-indigo-200 w-8 text-center">No</th>
-                                        <th class="py-2 px-3 font-semibold border-b border-indigo-200 whitespace-nowrap">Nama Guru</th>
-                                        <th class="py-2 px-3 font-semibold border-b border-indigo-200 text-center" title="Total Hari Hadir">Hari</th>
-                                        <th class="py-2 px-3 font-semibold border-b border-indigo-200 text-center" title="Total Sesi Mengajar">Sesi</th>
-                                        <th class="py-2 px-3 font-semibold border-b border-indigo-200 text-center" title="Total Jam Pelajaran">Jam</th>
+                                        <th class="py-2 px-3 font-semibold border border-indigo-200 w-8 text-center">No</th>
+                                        <th class="py-2 px-3 font-semibold border border-indigo-200 whitespace-nowrap">Nama Guru</th>
+                                        <th class="py-2 px-3 font-semibold border border-indigo-200 text-center" title="Total Hari Hadir">Hari</th>
+                                        <th class="py-2 px-3 font-semibold border border-indigo-200 text-center" title="Total Sesi Mengajar">Sesi</th>
+                                        <th class="py-2 px-3 font-semibold border border-indigo-200 text-center" title="Total Jam Pelajaran">Jam</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-100">`;
                                 
                     (res.rekapGuru || []).forEach((g, i) => {
                         html += `<tr class="hover:bg-indigo-50 transition">
-                                    <td class="py-2 px-3 text-center text-gray-500">${i + 1}</td>
-                                    <td class="py-2 px-3 font-medium whitespace-nowrap">${g.namaGuru}</td>
-                                    <td class="py-2 px-3 text-center font-bold text-indigo-600">${g.totalHadir}</td>
-                                    <td class="py-2 px-3 text-center font-bold text-blue-600">${g.totalJurnal}</td>
-                                    <td class="py-2 px-3 text-center font-bold text-purple-600">${g.totalJam || 0}</td>
+                                    <td class="py-2 px-3 border border-indigo-100 text-center text-gray-500">${i + 1}</td>
+                                    <td class="py-2 px-3 border border-indigo-100 font-medium whitespace-nowrap">${g.namaGuru}</td>
+                                    <td class="py-2 px-3 border border-indigo-100 text-center font-bold text-indigo-600">${g.totalHadir}</td>
+                                    <td class="py-2 px-3 border border-indigo-100 text-center font-bold text-blue-600">${g.totalJurnal}</td>
+                                    <td class="py-2 px-3 border border-indigo-100 text-center font-bold text-purple-600">${g.totalJam || 0}</td>
                                  </tr>`;
                     });
                     
@@ -1157,9 +1255,35 @@
                     html += `</ul></div>`;
                     
                     container.innerHTML = html;
-                    document.getElementById('btn-cetak-rekap').classList.remove('hidden');
+                    document.getElementById('btn-rekap-actions').classList.remove('hidden');
                 } else showToast("Gagal memuat rekap.");
             }).catch(() => { hideLoader(); showToast("Koneksi gagal."); });
+        }
+
+        function cetakPDFBulanan() {
+            document.body.classList.add('printing-monthly');
+            const style = document.createElement('style');
+            style.innerHTML = '@media print { @page { size: A4 landscape; margin: 10mm; } }';
+            style.id = 'print-style-monthly';
+            document.head.appendChild(style);
+            
+            window.print();
+            
+            document.head.removeChild(style);
+            document.body.classList.remove('printing-monthly');
+        }
+
+        function cetakPDFTahunan() {
+            document.body.classList.add('printing-yearly');
+            const style = document.createElement('style');
+            style.innerHTML = '@media print { @page { size: A4 portrait; margin: 15mm; } }';
+            style.id = 'print-style-yearly';
+            document.head.appendChild(style);
+            
+            window.print();
+            
+            document.head.removeChild(style);
+            document.body.classList.remove('printing-yearly');
         }
 
         function loadYearlyRecap() {
@@ -1295,7 +1419,7 @@
                 hideLoader();
                 if(res && res.success) {
                     showToast("Format siap!");
-                    setTimeout(() => alert("Buka file Spreadsheet 'Database_Si_Juragan' di Google Drive Anda. Format cetak telah tersedia di tab 'Cetak_Rekap'."), 500);
+                    setTimeout(() => showToast("Buka file Spreadsheet 'Database_Si_Juragan' di Google Drive Anda. Format cetak telah tersedia di tab 'Cetak_Rekap'."), 500);
                 } else showToast("Gagal mencetak.");
             }).catch(() => { hideLoader(); showToast("Gagal koneksi."); });
         }
