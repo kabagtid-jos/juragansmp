@@ -477,7 +477,7 @@
         // PENGATURAN API GOOGLE APPS SCRIPT
         // =========================================================================
         // Menggunakan URL Web App GAS terbaru sesuai permintaan
-        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbwVEiQL9-H9kM2n75xfp9lSKYa7_mc7OLw6LPHS9CpDxG_nCtz15lgRdd8X116AkMY0WA/exec";
+        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzmB2i58mZnIfZfdSUzf0V6xuRaxALMeRmr-MzhNY29cwzZpljQxGCn4Wl8iYGHRG0z/exec";
 
         // Fungsi pembungkus untuk memanggil Google Apps Script API via fetch()
         function callAPI(action, payload = null) {
@@ -1155,6 +1155,29 @@
                                             <th class="border border-gray-200 py-2 px-1 min-w-[28px] bg-yellow-50 text-yellow-700">I</th>
                                             <th class="border border-gray-200 py-2 px-1 min-w-[28px] bg-blue-50 text-blue-700">S</th>
                                             <th class="border border-gray-200 py-2 px-1 min-w-[28px] bg-red-50 text-red-700">A</th>
+                                        </tr>`;
+
+                        // BARIS BARU UNTUK AGENDA KEGIATAN
+                        html += `       <tr class="bg-teal-50">
+                                            <th class="border border-gray-200 py-2 px-3 sticky left-0 bg-teal-50 z-10 text-left text-teal-800 shadow-[2px_0_4px_rgba(0,0,0,0.05)] font-bold text-[10px]">
+                                                <i class="fas fa-calendar-alt mr-1 text-teal-600"></i> Agenda Sekolah
+                                            </th>`;
+                        
+                        for (let d = 1; d <= daysInMonth; d++) {
+                            let ev = res.agendaBulanIni && res.agendaBulanIni[d];
+                            let isFriday = new Date(y, m - 1, d).getDay() === 5;
+                            let bgClass = isFriday ? 'bg-red-50' : (ev ? 'bg-teal-100' : 'bg-teal-50');
+                            
+                            if (ev) {
+                                html += `   <th class="border border-teal-200 ${bgClass} align-bottom p-1" title="${ev}">
+                                                <div style="writing-mode: vertical-rl; transform: rotate(180deg); max-height: 80px;" class="mx-auto text-[9px] font-bold text-teal-800 overflow-hidden text-ellipsis whitespace-nowrap">${ev}</div>
+                                            </th>`;
+                            } else {
+                                html += `   <th class="border border-teal-200 ${bgClass}"></th>`;
+                            }
+                        }
+
+                        html += `           <th colspan="4" class="border border-teal-200 bg-teal-50"></th>
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-gray-100">`;
@@ -1300,7 +1323,7 @@
                     html += `<h3 class="font-bold text-gray-700 text-sm mb-3 print:mb-2 border-b pb-1">Top 3 Guru Paling Rajin Tahun ${tahun}</h3><div class="space-y-3 mb-6 print:mb-4 print:max-h-[20vh] print:overflow-hidden">`;
                     if(data.rankingGuru && data.rankingGuru.length) {
                         const maxTotal = data.rankingGuru[0].totalHadir; 
-                        // MENAMBAHKAN .slice(0, 3) AGAR HANYA MENAMPILKAN 3 TERATAS
+                        // FITUR FILTER 3 TERATAS (.slice(0, 3))
                         data.rankingGuru.slice(0, 3).forEach((item, index) => {
                             const rankColor = index === 0 ? 'text-yellow-500' : (index === 1 ? 'text-gray-400' : (index === 2 ? 'text-amber-600' : 'text-indigo-400'));
                             const rankIcon = index < 3 ? 'fa-medal' : 'fa-user-tie';
