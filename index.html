@@ -73,6 +73,13 @@
             body.printing-monthly #view-recap-monthly { display: block !important; background: #ffffff !important; padding: 0 !important; }
             body.printing-monthly .overflow-x-auto { overflow: visible !important; }
             
+            /* Logic Pemisahan Tabel Rekap Bulanan */
+            body.printing-monthly-grid #print-summary,
+            body.printing-monthly-grid #print-absen-siswa { display: none !important; }
+
+            body.printing-monthly-summary #print-grid,
+            body.printing-monthly-summary #print-absen-siswa { display: none !important; }
+            
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             h3 { page-break-after: avoid; }
             .bg-white, .glass-card, canvas { page-break-inside: avoid; }
@@ -430,14 +437,22 @@
                     <input type="month" id="filter-month" class="flex-1 p-3 border border-gray-300 rounded-xl focus:outline-none focus:border-indigo-500">
                     <button type="button" onclick="loadMonthlyRecap()" class="bg-indigo-600 text-white px-4 rounded-xl shadow hover:bg-indigo-700"><i class="fas fa-search"></i></button>
                 </div>
+                
+                <!-- CONTAINER HASIL REKAP -->
                 <div id="monthly-result-container" class="space-y-4 pb-4">
                     <div class="text-center text-gray-400 py-10"><i class="fas fa-search text-4xl mb-3"></i><p>Pilih bulan dan klik cari.</p></div>
                 </div>
                 
+                <!-- TOMBOL AKSI -->
                 <div id="btn-rekap-actions" class="hidden space-y-3 mt-4 print:hidden">
-                    <button type="button" onclick="cetakPDFBulanan()" class="w-full bg-red-600 text-white font-semibold py-3 rounded-xl shadow-md hover:bg-red-700 transition cursor-pointer flex justify-center items-center">
-                        <i class="fas fa-file-pdf mr-2"></i> Preview & Download PDF (A4 Landscape)
-                    </button>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button type="button" onclick="cetakPDFBulananGrid()" class="w-full bg-red-600 text-white font-semibold py-2.5 rounded-xl shadow-md hover:bg-red-700 transition cursor-pointer flex flex-col justify-center items-center text-xs">
+                            <i class="fas fa-table mb-1 text-lg"></i> PDF Grid Absen
+                        </button>
+                        <button type="button" onclick="cetakPDFBulananSummary()" class="w-full bg-orange-600 text-white font-semibold py-2.5 rounded-xl shadow-md hover:bg-orange-700 transition cursor-pointer flex flex-col justify-center items-center text-xs">
+                            <i class="fas fa-list-ol mb-1 text-lg"></i> PDF Sesi & Jam
+                        </button>
+                    </div>
                     <button type="button" onclick="cetakRekap()" class="w-full bg-green-600 text-white font-semibold py-3 rounded-xl shadow-md hover:bg-green-700 transition cursor-pointer flex justify-center items-center">
                         <i class="fas fa-file-excel mr-2"></i> Simpan ke Google Sheets
                     </button>
@@ -1109,9 +1124,18 @@
                 if (res && res.success) {
                     const container = document.getElementById('monthly-result-container');
                     
-                    // Membuat Header untuk versi Cetak (Kop Surat)
+                    // Membuat Header untuk versi Cetak (Kop Surat) - Diset page-break-after: avoid agar menempel tabel
                     const bulanFormat = new Date(bulan + '-01').toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
-                    let html = `<div class="hidden print:flex print:items-center print:mb-4"><div class="mr-4"><img src="https://i.ibb.co.com/PvyzRgq9/Logo-SMP-Unggulan-Abu-Zairi.png" alt="Logo SMP" class="w-16 h-16 object-contain"></div><div class="flex-1"><h2 class="text-xl font-bold text-gray-900 leading-tight">Rekapitulasi Kehadiran Bulanan Guru<br>SMP Unggulan Abu Zairi</h2><p class="text-gray-800 font-semibold mt-1">Periode: ${bulanFormat}</p></div></div><div class="hidden print:block w-full border-b-2 border-gray-900 mb-4"></div>`;
+                    let html = `<div id="print-header" style="page-break-after: avoid; page-break-inside: avoid;">
+                        <div class="hidden print:flex print:items-center print:mb-4">
+                            <div class="mr-4"><img src="https://i.ibb.co.com/PvyzRgq9/Logo-SMP-Unggulan-Abu-Zairi.png" alt="Logo SMP" class="w-16 h-16 object-contain"></div>
+                            <div class="flex-1">
+                                <h2 class="text-xl font-bold text-gray-900 leading-tight">Rekapitulasi Kehadiran Bulanan Guru<br>SMP Unggulan Abu Zairi</h2>
+                                <p class="text-gray-800 font-semibold mt-1">Periode: ${bulanFormat}</p>
+                            </div>
+                        </div>
+                        <div class="hidden print:block w-full border-b-2 border-gray-900 mb-4"></div>
+                    </div>`;
 
                     if (res.guruTeladan && res.guruTeladan.length) {
                         html += `<div class="bg-gradient-to-r from-yellow-400 to-orange-500 p-4 rounded-xl shadow-md mb-4 text-white print:hidden"><h3 class="font-bold text-sm flex items-center"><i class="fas fa-trophy mr-2"></i> Guru Teladan Bulan Ini</h3><p class="text-[10px] opacity-90 mb-2">Hadir penuh tanpa izin/sakit/alpa.</p><div class="space-y-1">` + res.guruTeladan.map(g => `<div class="text-xs font-semibold flex items-center"><i class="fas fa-star text-yellow-200 mr-2 text-[10px]"></i> ${g}</div>`).join('') + `</div></div>`;
@@ -1124,12 +1148,12 @@
                         const m = parseInt(parts[1], 10);
                         const daysInMonth = new Date(y, m, 0).getDate();
                         
-                        html += `<div class="bg-white border border-gray-200 p-4 rounded-xl shadow-sm mb-4">
+                        html += `<div id="print-grid" class="bg-white border border-gray-200 p-4 rounded-xl shadow-sm mb-4" style="page-break-before: auto; page-break-inside: auto;">
                             <div class="flex justify-between items-center mb-2">
                                 <h3 class="font-bold text-sm text-gray-800">Tabel Detail Bulanan</h3>
                                 <button type="button" onclick="copyTableToClipboard('tabel-detail-bulanan')" class="text-[10px] bg-white border border-gray-200 text-gray-600 hover:bg-gray-100 px-2 py-1 rounded shadow-sm transition print:hidden"><i class="fas fa-copy mr-1"></i>Salin</button>
                             </div>
-                            <div class="flex flex-wrap items-center gap-2 text-[10px] mb-3 p-2 bg-blue-50 text-blue-800 rounded-lg border border-blue-100">
+                            <div class="flex flex-wrap items-center gap-2 text-[10px] mb-3 p-2 bg-blue-50 text-blue-800 rounded-lg border border-blue-100 print:hidden">
                                 <span class="font-bold"><i class="fas fa-info-circle mr-1"></i>Petunjuk:</span>
                                 <span class="font-bold text-green-600">v = Hadir</span>
                                 <span class="font-bold text-yellow-600">I = Izin</span>
@@ -1138,6 +1162,7 @@
                                 <span class="font-bold text-purple-600">DL = Dinas Luar</span>
                                 <span class="font-bold text-gray-600">C = Cuti</span>
                                 <span class="flex items-center ml-2"><span class="w-3 h-3 bg-red-50 border border-red-100 inline-block mr-1"></span> Libur (Jumat)</span>
+                                <span class="flex items-center ml-2"><span class="w-3 h-3 bg-amber-100 border border-amber-300 inline-block mr-1"></span> Agenda Sekolah</span>
                             </div>
                             <div class="overflow-x-auto custom-scrollbar border border-gray-200 rounded-lg shadow-inner">
                                 <table id="tabel-detail-bulanan" class="min-w-full text-[10px] text-center border-collapse">
@@ -1145,9 +1170,11 @@
                                         <tr class="bg-gray-100 text-gray-700">
                                             <th class="border border-gray-200 py-2 px-3 sticky left-0 bg-gray-100 z-10 min-w-[120px] text-left shadow-[2px_0_4px_rgba(0,0,0,0.05)]">Nama Guru</th>`;
                                             
+                        // 1. HEADER TANGGAL
                         for (let d = 1; d <= daysInMonth; d++) {
+                            let hasEvent = res.agendaBulanIni && res.agendaBulanIni[d];
                             let isFriday = new Date(y, m - 1, d).getDay() === 5;
-                            let bgClass = isFriday ? 'bg-red-100 text-red-600 font-bold' : 'bg-gray-50';
+                            let bgClass = isFriday ? 'bg-red-100 text-red-600 font-bold' : (hasEvent ? 'bg-amber-200 text-amber-900 font-bold' : 'bg-gray-50');
                             html += `<th class="border border-gray-200 py-1.5 px-1 min-w-[24px] ${bgClass}">${d}</th>`;
                         }
                         
@@ -1157,31 +1184,33 @@
                                             <th class="border border-gray-200 py-2 px-1 min-w-[28px] bg-red-50 text-red-700">A</th>
                                         </tr>`;
 
-                        // BARIS BARU UNTUK AGENDA KEGIATAN
-                        html += `       <tr class="bg-teal-50">
-                                            <th class="border border-gray-200 py-2 px-3 sticky left-0 bg-teal-50 z-10 text-left text-teal-800 shadow-[2px_0_4px_rgba(0,0,0,0.05)] font-bold text-[10px]">
-                                                <i class="fas fa-calendar-alt mr-1 text-teal-600"></i> Agenda Sekolah
+                        // 2. BARIS AGENDA SEKOLAH
+                        html += `       <tr class="bg-gray-50">
+                                            <th class="border border-gray-200 py-2 px-3 sticky left-0 bg-gray-50 z-10 text-left text-gray-700 shadow-[2px_0_4px_rgba(0,0,0,0.05)] font-bold text-[10px]">
+                                                <i class="fas fa-calendar-alt mr-1 text-gray-400 print:hidden"></i> Agenda
                                             </th>`;
                         
                         for (let d = 1; d <= daysInMonth; d++) {
                             let ev = res.agendaBulanIni && res.agendaBulanIni[d];
                             let isFriday = new Date(y, m - 1, d).getDay() === 5;
-                            let bgClass = isFriday ? 'bg-red-50' : (ev ? 'bg-teal-100' : 'bg-teal-50');
+                            let bgClass = isFriday ? 'bg-red-50' : (ev ? 'bg-amber-100' : 'bg-gray-50');
                             
                             if (ev) {
-                                html += `   <th class="border border-teal-200 ${bgClass} align-bottom p-1" title="${ev}">
-                                                <div style="writing-mode: vertical-rl; transform: rotate(180deg); max-height: 80px;" class="mx-auto text-[9px] font-bold text-teal-800 overflow-hidden text-ellipsis whitespace-nowrap">${ev}</div>
+                                // Teks horizontal diputar vertikal. Membuang batasan tinggi agar tabel otomatis memanjang.
+                                html += `   <th class="border border-gray-200 ${bgClass} align-bottom p-1" title="${ev}">
+                                                <div style="writing-mode: vertical-rl; transform: rotate(180deg);" class="mx-auto text-[9px] font-bold text-amber-900 py-1 whitespace-nowrap tracking-wide">${ev}</div>
                                             </th>`;
                             } else {
-                                html += `   <th class="border border-teal-200 ${bgClass}"></th>`;
+                                html += `   <th class="border border-gray-200 ${bgClass}"></th>`;
                             }
                         }
 
-                        html += `           <th colspan="4" class="border border-teal-200 bg-teal-50"></th>
+                        html += `           <th colspan="4" class="border border-gray-200 bg-gray-50"></th>
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-gray-100">`;
 
+                        // 3. BARIS SEL DATA GURU
                         let sortedGurus = Object.keys(res.gridKehadiran).sort();
                         sortedGurus.forEach(guru => {
                             let dataG = res.gridKehadiran[guru];
@@ -1191,15 +1220,26 @@
                             for (let d = 1; d <= daysInMonth; d++) {
                                 let status = dataG.detail[d];
                                 let isFriday = new Date(y, m - 1, d).getDay() === 5;
-                                let cellClass = isFriday ? 'bg-red-50 border border-gray-200' : 'border border-gray-200';
+                                let hasEvent = res.agendaBulanIni && res.agendaBulanIni[d];
+                                
+                                let cellClass = 'border border-gray-200';
                                 let content = '';
                                 
+                                // Jika ada isi absensi
                                 if (status === 'v') { content = 'v'; cellClass += ' bg-green-100 text-green-700 font-bold'; }
                                 else if (status === 'S') { content = 'S'; cellClass += ' bg-blue-100 text-blue-700 font-bold'; }
                                 else if (status === 'I') { content = 'I'; cellClass += ' bg-yellow-100 text-yellow-700 font-bold'; }
                                 else if (status === 'A') { content = 'A'; cellClass += ' bg-red-100 text-red-700 font-bold'; }
                                 else if (status === 'DL') { content = 'DL'; cellClass += ' bg-purple-100 text-purple-700 font-bold'; }
                                 else if (status === 'C') { content = 'C'; cellClass += ' bg-gray-200 text-gray-700 font-bold'; }
+                                else {
+                                    // Kolom kosong, maka warnai seluruh kolom sesuai event / libur
+                                    if (isFriday) {
+                                        cellClass += ' bg-red-50';
+                                    } else if (hasEvent) {
+                                        cellClass += ' bg-amber-50';
+                                    }
+                                }
                                 
                                 html += `<td class="${cellClass}">${content}</td>`;
                             }
@@ -1218,7 +1258,7 @@
                     }
                     // --- TAMBAHAN GRID KEHADIRAN SELESAI ---
 
-                    html += `<div class="bg-indigo-50 p-4 rounded-xl shadow-sm mb-4 page-break">
+                    html += `<div id="print-summary" class="bg-indigo-50 p-4 rounded-xl shadow-sm mb-4" style="page-break-before: auto; page-break-inside: auto;">
                         <div class="flex justify-between items-center mb-3 border-b border-indigo-200 pb-2">
                             <h3 class="font-bold text-sm text-indigo-800"><i class="fas fa-clipboard-list mr-2"></i>Rekap Sesi & Jam</h3>
                             <button type="button" onclick="copyTableToClipboard('tabel-gaji')" class="text-[10px] bg-white border border-indigo-200 text-indigo-600 hover:bg-indigo-600 hover:text-white px-2 py-1 rounded shadow-sm transition print:hidden"><i class="fas fa-copy mr-1"></i>Salin Excel</button>
@@ -1249,7 +1289,7 @@
                     html += `   </tbody>
                             </table>
                         </div>
-                        <p class="text-[9px] text-gray-500 mt-2 text-center"><i class="fas fa-info-circle mr-1"></i> Sesi = Jumlah Jurnal. Jam = Total Jam Pelajaran.</p>
+                        <p class="text-[9px] text-gray-500 mt-2 text-center print:hidden"><i class="fas fa-info-circle mr-1"></i> Sesi = Jumlah Jurnal. Jam = Total Jam Pelajaran.</p>
                     </div>`;
                     
                     let absenMap = {};
@@ -1263,7 +1303,7 @@
                     }
                     
                     let totalSiswaAbsenUnik = Object.keys(absenMap).length;
-                    html += `<div class="bg-white border border-gray-200 p-4 rounded-xl shadow-sm"><div class="flex justify-between items-center mb-3 border-b pb-1"><h3 class="font-bold text-sm text-gray-800">Siswa Tidak Hadir Bulan Ini</h3><span class="text-[10px] font-bold bg-red-100 text-red-600 px-2 py-0.5 rounded-full">Total: ${totalSiswaAbsenUnik} Anak</span></div><ul class="space-y-3">`;
+                    html += `<div id="print-absen-siswa" class="bg-white border border-gray-200 p-4 rounded-xl shadow-sm"><div class="flex justify-between items-center mb-3 border-b pb-1"><h3 class="font-bold text-sm text-gray-800">Siswa Tidak Hadir Bulan Ini</h3><span class="text-[10px] font-bold bg-red-100 text-red-600 px-2 py-0.5 rounded-full">Total: ${totalSiswaAbsenUnik} Anak</span></div><ul class="space-y-3">`;
                     if (totalSiswaAbsenUnik > 0) {
                         for (let namaSiswa in absenMap) {
                             let dataSiswa = absenMap[namaSiswa];
@@ -1283,8 +1323,9 @@
             }).catch(() => { hideLoader(); showToast("Koneksi gagal."); });
         }
 
-        function cetakPDFBulanan() {
-            document.body.classList.add('printing-monthly');
+        // FUNGSI PRINT PDF GRID (LANDSCAPE)
+        function cetakPDFBulananGrid() {
+            document.body.classList.add('printing-monthly', 'printing-monthly-grid');
             const style = document.createElement('style');
             style.innerHTML = '@media print { @page { size: A4 landscape; margin: 10mm; } }';
             style.id = 'print-style-monthly';
@@ -1293,7 +1334,21 @@
             window.print();
             
             document.head.removeChild(style);
-            document.body.classList.remove('printing-monthly');
+            document.body.classList.remove('printing-monthly', 'printing-monthly-grid');
+        }
+
+        // FUNGSI PRINT PDF SUMMARY (PORTRAIT)
+        function cetakPDFBulananSummary() {
+            document.body.classList.add('printing-monthly', 'printing-monthly-summary');
+            const style = document.createElement('style');
+            style.innerHTML = '@media print { @page { size: A4 portrait; margin: 15mm; } }';
+            style.id = 'print-style-monthly';
+            document.head.appendChild(style);
+            
+            window.print();
+            
+            document.head.removeChild(style);
+            document.body.classList.remove('printing-monthly', 'printing-monthly-summary');
         }
 
         function cetakPDFTahunan() {
