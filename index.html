@@ -1300,7 +1300,8 @@
                     html += `<h3 class="font-bold text-gray-700 text-sm mb-3 print:mb-2 border-b pb-1">Top 3 Guru Paling Rajin Tahun ${tahun}</h3><div class="space-y-3 mb-6 print:mb-4 print:max-h-[20vh] print:overflow-hidden">`;
                     if(data.rankingGuru && data.rankingGuru.length) {
                         const maxTotal = data.rankingGuru[0].totalHadir; 
-                        data.rankingGuru.forEach((item, index) => {
+                        // MENAMBAHKAN .slice(0, 3) AGAR HANYA MENAMPILKAN 3 TERATAS
+                        data.rankingGuru.slice(0, 3).forEach((item, index) => {
                             const rankColor = index === 0 ? 'text-yellow-500' : (index === 1 ? 'text-gray-400' : (index === 2 ? 'text-amber-600' : 'text-indigo-400'));
                             const rankIcon = index < 3 ? 'fa-medal' : 'fa-user-tie';
                             const percentage = (item.totalHadir / maxTotal) * 100;
