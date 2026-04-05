@@ -3,6 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#4f46e5">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Si Juragan - Jurnal Guru</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -61,24 +65,35 @@
             .page-break { page-break-after: always !important; break-after: page !important; }
             html, body { height: auto !important; overflow: visible !important; background-color: #ffffff !important; margin: 0 !important; padding: 0 !important; }
             #app-wrapper { max-width: 100% !important; width: 100% !important; height: auto !important; overflow: visible !important; background: #ffffff !important; box-shadow: none !important; position: static !important; display: block !important; }
-            
             .app-view:not(.active) { display: none !important; }
             .app-view.active { display: block !important; padding: 0 !important; background: #ffffff !important; }
-            
             .overflow-x-auto { overflow: visible !important; }
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-            
             h3 { page-break-after: avoid; }
             .bg-white, .glass-card, canvas { page-break-inside: avoid; }
-            .guru-print-block { page-break-inside: avoid; margin-bottom: 20px; }
             table { page-break-inside: auto; width: 100% !important; }
             tr { page-break-inside: avoid; page-break-after: auto; }
-            td, th { word-wrap: break-word; }
-            
             #print-all-gurus-container { display: block !important; }
             #single-guru-container { display: none !important; }
         }
     </style>
+
+    <!-- INJEKSI PWA SCRIPT -->
+    <script>
+        // Membuat Manifest JSON secara dinamis dengan Data URI (Lebih aman dari Blob)
+        const manifestData = {
+            "name": "Si Juragan - Jurnal Guru",
+            "short_name": "Si Juragan",
+            "start_url": ".",
+            "display": "standalone",
+            "background_color": "#f3f4f6",
+            "theme_color": "#4f46e5",
+            "description": "Aplikasi Sistem Jurnal Guru Andalan",
+            "icons": [{"src": "https://i.ibb.co.com/PvyzRgq9/Logo-SMP-Unggulan-Abu-Zairi.png", "sizes": "192x192", "type": "image/png"}]
+        };
+        const manifestUrl = 'data:application/manifest+json;charset=utf-8,' + encodeURIComponent(JSON.stringify(manifestData));
+        document.write(`<link rel="manifest" href="${manifestUrl}">`);
+    </script>
 </head>
 <body class="text-gray-800 antialiased">
 
@@ -104,9 +119,7 @@
                 <h2 class="text-lg font-bold leading-tight">Agenda Hari Ini!</h2>
                 <p class="text-[10px] text-teal-100 mt-0.5" id="agenda-modal-date"></p>
             </div>
-            <div class="p-4 max-h-48 overflow-y-auto custom-scrollbar bg-gray-50" id="agenda-modal-content">
-                <!-- Agenda items injected here -->
-            </div>
+            <div class="p-4 max-h-48 overflow-y-auto custom-scrollbar bg-gray-50" id="agenda-modal-content"></div>
             <div class="p-3 bg-white border-t border-gray-100">
                 <button type="button" onclick="closeAgendaModal()" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-2 rounded-lg transition text-xs">Tutup</button>
             </div>
@@ -189,30 +202,44 @@
             </div>
 
             <div class="px-6 py-6 pb-20 flex-1">
-                <div id="menu-isi-jurnal" onclick="openInputJurnal()" class="glass-card p-4 flex items-center cursor-pointer hover:shadow-lg transition transform hover:-translate-y-1 bg-white mb-6" style="display: none;">
-                    <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xl mr-4 transition"><i class="fas fa-edit"></i></div>
-                    <div><h3 class="font-bold text-gray-800">Isi Jurnal Mengajar</h3><p class="text-xs text-gray-500">Catat aktivitas KBM hari ini</p></div>
-                </div>
-
-                <div id="menu-input-izin" onclick="openInputIzin()" class="glass-card p-4 flex items-center cursor-pointer hover:shadow-lg transition transform hover:-translate-y-1 bg-white mb-6 border-l-4 border-yellow-500" style="display: none;">
-                    <div class="w-12 h-12 rounded-full bg-yellow-100 text-yellow-600 flex items-center justify-center text-xl mr-4"><i class="fas fa-user-clock"></i></div>
-                    <div><h3 class="font-bold text-gray-800">Input Guru Izin</h3><p class="text-xs text-gray-500">Catat ketidakhadiran guru hari ini</p></div>
-                </div>
-
-                <div id="menu-kalender" onclick="openKalender()" class="glass-card p-4 flex items-center cursor-pointer hover:shadow-lg transition transform hover:-translate-y-1 bg-white mb-6 border-l-4 border-teal-500">
-                    <div class="w-12 h-12 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center text-xl mr-4"><i class="fas fa-calendar-alt"></i></div>
-                    <div><h3 class="font-bold text-gray-800">Kalender Pendidikan</h3><p class="text-xs text-gray-500">Lihat agenda kegiatan sekolah</p></div>
+                <!-- Menu Grid -->
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div id="menu-isi-jurnal" onclick="openInputJurnal()" class="glass-card p-4 flex flex-col items-center text-center cursor-pointer hover:shadow-lg transition transform hover:-translate-y-1 bg-white border-b-4 border-blue-500" style="display: none;">
+                        <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xl mb-2"><i class="fas fa-edit"></i></div>
+                        <h3 class="font-bold text-gray-800 text-xs">Isi Jurnal</h3>
+                    </div>
+                    <div id="menu-riwayat-jurnal" onclick="openHistory()" class="glass-card p-4 flex flex-col items-center text-center cursor-pointer hover:shadow-lg transition transform hover:-translate-y-1 bg-white border-b-4 border-indigo-500" style="display: none;">
+                        <div class="w-12 h-12 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xl mb-2"><i class="fas fa-history"></i></div>
+                        <h3 class="font-bold text-gray-800 text-xs">Riwayat Jurnal</h3>
+                    </div>
+                    <div id="menu-input-izin" onclick="openInputIzin()" class="glass-card p-4 flex flex-col items-center text-center cursor-pointer hover:shadow-lg transition transform hover:-translate-y-1 bg-white border-b-4 border-yellow-500" style="display: none;">
+                        <div class="w-12 h-12 rounded-full bg-yellow-100 text-yellow-600 flex items-center justify-center text-xl mb-2"><i class="fas fa-user-clock"></i></div>
+                        <h3 class="font-bold text-gray-800 text-xs">Input Izin</h3>
+                    </div>
+                    <div id="menu-kalender" onclick="openKalender()" class="glass-card p-4 flex flex-col items-center text-center cursor-pointer hover:shadow-lg transition transform hover:-translate-y-1 bg-white border-b-4 border-teal-500 col-span-2 sm:col-span-1">
+                        <div class="w-12 h-12 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center text-xl mb-2"><i class="fas fa-calendar-alt"></i></div>
+                        <h3 class="font-bold text-gray-800 text-xs">Kalender Pendidikan</h3>
+                    </div>
                 </div>
 
                 <div id="admin-menu" class="hidden mb-6">
+                    <h3 class="text-gray-800 font-semibold mb-3 text-sm">Menu Admin & Rekap</h3>
                     <div class="grid grid-cols-2 gap-4">
-                        <div onclick="switchView('view-recap-monthly')" class="glass-card p-4 flex flex-col items-center justify-center text-center cursor-pointer hover:shadow-lg transition transform hover:-translate-y-1 bg-white">
+                        <div onclick="switchView('view-recap-monthly')" class="glass-card p-4 flex flex-col items-center justify-center text-center cursor-pointer hover:shadow-lg transition transform hover:-translate-y-1 bg-white border-b-4 border-green-500">
                             <div class="w-12 h-12 rounded-full bg-green-100 text-green-600 flex items-center justify-center mb-2 text-xl"><i class="fas fa-calendar-check"></i></div>
-                            <span class="font-medium text-xs text-gray-700">Rekap Bulanan</span>
+                            <span class="font-bold text-xs text-gray-800">Rekap Bulanan</span>
                         </div>
-                        <div onclick="switchView('view-recap-yearly')" class="glass-card p-4 flex flex-col items-center justify-center text-center cursor-pointer hover:shadow-lg transition transform hover:-translate-y-1 bg-white">
+                        <div onclick="switchView('view-recap-yearly')" class="glass-card p-4 flex flex-col items-center justify-center text-center cursor-pointer hover:shadow-lg transition transform hover:-translate-y-1 bg-white border-b-4 border-purple-500">
                             <div class="w-12 h-12 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center mb-2 text-xl"><i class="fas fa-chart-bar"></i></div>
-                            <span class="font-medium text-xs text-gray-700">Rekap Tahunan</span>
+                            <span class="font-bold text-xs text-gray-800">Rekap Tahunan</span>
+                        </div>
+                        <div onclick="openJurnalKelas()" class="glass-card p-4 flex flex-col items-center justify-center text-center cursor-pointer hover:shadow-lg transition transform hover:-translate-y-1 bg-white border-b-4 border-emerald-500">
+                            <div class="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mb-2 text-xl"><i class="fas fa-book-reader"></i></div>
+                            <span class="font-bold text-xs text-gray-800">Buku Kelas</span>
+                        </div>
+                        <div onclick="openWaSettings()" class="glass-card p-4 flex flex-col items-center justify-center text-center cursor-pointer hover:shadow-lg transition transform hover:-translate-y-1 bg-white border-b-4 border-blue-500">
+                            <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mb-2 text-xl"><i class="fas fa-whatsapp"></i></div>
+                            <span class="font-bold text-xs text-gray-800">Pengaturan WA</span>
                         </div>
                     </div>
                 </div>
@@ -240,6 +267,104 @@
                 <div class="glass-card bg-white p-4 mb-6">
                     <ul id="siswa-absen-container" class="text-xs text-gray-600 space-y-3"></ul>
                 </div>
+            </div>
+        </div>
+
+        <!-- FITUR BARU: 2A. RIWAYAT JURNAL PRIBADI -->
+        <div id="view-history" class="app-view bg-gray-50">
+            <div class="bg-white shadow-sm px-4 py-4 flex items-center sticky top-0 z-10 flex-shrink-0">
+                <button type="button" onclick="switchView('view-dashboard')" class="text-gray-600 hover:text-indigo-600 p-2"><i class="fas fa-arrow-left text-lg"></i></button>
+                <h2 class="ml-3 font-semibold text-gray-800">Riwayat Jurnal Pribadi</h2>
+            </div>
+            <div class="p-6 flex-1 pb-20">
+                <div class="bg-indigo-50 border-l-4 border-indigo-400 p-4 rounded-r-lg mb-6 text-sm text-indigo-800">
+                    Menampilkan 20 jurnal terakhir yang Anda input.
+                </div>
+                <div id="history-container" class="space-y-4">
+                    <div class="text-center text-gray-400 py-10"><i class="fas fa-spinner fa-spin text-2xl mb-2"></i><br>Memuat riwayat...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FITUR BARU: 2B. BUKU JURNAL KELAS DIGITAL (KHUSUS ADMIN) -->
+        <div id="view-jurnal-kelas" class="app-view bg-gray-50">
+            <div class="bg-white shadow-sm px-4 py-4 flex items-center sticky top-0 z-10 flex-shrink-0">
+                <button type="button" onclick="switchView('view-dashboard')" class="text-gray-600 hover:text-emerald-600 p-2"><i class="fas fa-arrow-left text-lg"></i></button>
+                <h2 class="ml-3 font-semibold text-gray-800">Buku Jurnal Kelas</h2>
+            </div>
+            <div class="p-6 flex-1 pb-20">
+                <div class="glass-card bg-white p-4 mb-6">
+                    <div class="grid grid-cols-2 gap-3 mb-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Tanggal</label>
+                            <input type="date" id="filter-jk-tanggal" class="w-full p-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Kelas</label>
+                            <select id="filter-jk-kelas" class="w-full p-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white">
+                                <option value="">Pilih Kelas</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="button" onclick="loadJurnalKelas()" class="w-full bg-emerald-600 text-white font-semibold py-2.5 rounded-lg shadow hover:bg-emerald-700 transition cursor-pointer text-sm">
+                        <i class="fas fa-search mr-1"></i> Cari Jurnal Kelas
+                    </button>
+                </div>
+                
+                <h3 class="text-gray-800 font-semibold mb-3 text-sm border-b pb-2">Hasil Pencarian</h3>
+                <div id="jk-result-container" class="space-y-4">
+                    <div class="text-center text-gray-400 py-10"><i class="fas fa-book text-3xl mb-3 text-gray-300"></i><p class="text-xs">Silakan pilih tanggal & kelas.</p></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FITUR BARU: PENGATURAN WA GATEWAY (KHUSUS ADMIN) -->
+        <div id="view-wa-settings" class="app-view bg-gray-50">
+            <div class="bg-white shadow-sm px-4 py-4 flex items-center sticky top-0 z-10 flex-shrink-0">
+                <button type="button" onclick="switchView('view-dashboard')" class="text-gray-600 hover:text-blue-600 p-2"><i class="fas fa-arrow-left text-lg"></i></button>
+                <h2 class="ml-3 font-semibold text-gray-800">Pengaturan WA Gateway</h2>
+            </div>
+            <div class="p-6 flex-1 pb-20">
+                <div class="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg mb-6 text-xs text-blue-800 leading-relaxed">
+                    <strong>Penting:</strong> Fitur ini menggunakan API dari <a href="https://fonnte.com" target="_blank" class="underline font-bold">Fonnte</a>. <br>
+                    Anda <b>WAJIB</b> memasang Pemicu (Trigger) di Google Apps Script dengan pengaturan berjalan <b>"Setiap Jam"</b> agar fitur jam otomatis berfungsi.
+                </div>
+                
+                <form id="waSettingsForm" onsubmit="event.preventDefault(); submitWaSettings();">
+                    <div class="mb-4 flex items-center justify-between glass-card bg-white p-4">
+                        <label class="text-sm font-bold text-gray-700">Aktifkan Pengingat Otomatis</label>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                          <input type="checkbox" id="wa-aktif" class="sr-only peer">
+                          <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        </label>
+                    </div>
+
+                    <div class="glass-card bg-white p-4 mb-4">
+                        <div class="mb-4">
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Fonnte API Token</label>
+                            <input type="text" id="wa-token" class="w-full p-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 bg-gray-50" placeholder="Masukkan Token">
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Jam Pengiriman Peringatan</label>
+                            <select id="wa-jam" class="w-full p-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                                <option value="12">12:00 WIB (Siang)</option>
+                                <option value="13">13:00 WIB (Siang)</option>
+                                <option value="14">14:00 WIB (Siang)</option>
+                                <option value="15">15:00 WIB (Sore)</option>
+                                <option value="16">16:00 WIB (Sore)</option>
+                            </select>
+                        </div>
+                        <div class="mb-2">
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Template Pesan</label>
+                            <p class="text-[10px] text-gray-500 mb-2">Gunakan variabel <b>{nama_guru}</b> untuk memanggil nama.</p>
+                            <textarea id="wa-template" rows="6" class="w-full p-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 bg-gray-50"></textarea>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-3 rounded-xl shadow-md hover:bg-blue-700 transition cursor-pointer">
+                        <i class="fas fa-save mr-2"></i> Simpan Pengaturan
+                    </button>
+                </form>
             </div>
         </div>
 
@@ -315,7 +440,7 @@
                         <textarea id="input-catatan" rows="2" placeholder="Kejadian khusus di kelas..." class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none"></textarea>
                     </div>
 
-                    <button type="submit" class="w-full mt-6 bg-indigo-600 text-white font-semibold py-3 rounded-xl shadow-md hover:bg-indigo-700 transition cursor-pointer">
+                    <button type="submit" class="w-full mt-5 bg-indigo-600 text-white font-semibold py-3 rounded-xl shadow-md hover:bg-indigo-700 transition cursor-pointer">
                         <i class="fas fa-paper-plane mr-2"></i> Simpan Jurnal
                     </button>
                 </form>
@@ -368,7 +493,6 @@
             </div>
             <div class="p-6 flex-1 pb-20">
                 
-                <!-- Form Input (Admin Only) -->
                 <div id="admin-agenda-form" class="mb-6 hidden">
                     <div class="bg-teal-50 border-l-4 border-teal-400 p-4 rounded-r-lg mb-4 text-sm text-teal-800 font-medium flex items-start">
                         <i class="fas fa-shield-alt mt-0.5 mr-2"></i> Mode Admin: Anda dapat menambahkan agenda kegiatan sekolah di sini.
@@ -392,7 +516,6 @@
                     </form>
                 </div>
 
-                <!-- Grid Kalender UI -->
                 <div class="bg-white rounded-xl shadow-sm mb-6 border border-gray-100 overflow-hidden">
                     <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-white">
                         <button type="button" onclick="changeMonth(-1)" class="text-teal-600 w-8 h-8 flex items-center justify-center hover:bg-teal-50 rounded-full transition"><i class="fas fa-chevron-left"></i></button>
@@ -403,11 +526,9 @@
                         <div>Ahad</div><div>Senin</div><div>Selasa</div><div>Rabu</div><div>Kamis</div><div class="text-red-500 font-bold">Jumat</div><div>Sabtu</div>
                     </div>
                     <div id="calendar-grid" class="grid grid-cols-7 gap-1 p-2 text-sm bg-white">
-                        <!-- Kotak Tanggal Akan Dirender Disini Oleh JS -->
                     </div>
                 </div>
 
-                <!-- List Agenda -->
                 <div class="flex items-center justify-between mb-3">
                     <h3 class="text-gray-800 font-bold text-sm flex items-center"><i class="fas fa-list-ul mr-2 text-teal-600"></i> Agenda Kegiatan</h3>
                 </div>
@@ -417,7 +538,7 @@
             </div>
         </div>
 
-        <!-- 4. REKAP BULANAN DENGAN TAB -->
+        <!-- 4. REKAP BULANAN -->
         <div id="view-recap-monthly" class="app-view bg-gray-50 print:bg-white">
             <div class="bg-white shadow-sm px-4 py-4 flex items-center sticky top-0 z-10 flex-shrink-0 print:hidden">
                 <button type="button" onclick="switchView('view-dashboard')" class="text-gray-600 hover:text-indigo-600 p-2"><i class="fas fa-arrow-left text-lg"></i></button>
@@ -430,21 +551,17 @@
                     <button type="button" onclick="loadMonthlyRecap()" class="bg-indigo-600 text-white px-4 rounded-xl shadow hover:bg-indigo-700"><i class="fas fa-search"></i></button>
                 </div>
                 
-                <!-- TAB NAVIGATION -->
                 <div id="monthly-tabs" class="hidden grid-cols-2 gap-2 mb-4 print:hidden bg-gray-200 p-1 rounded-xl">
                     <button type="button" id="tab-btn-grid" onclick="switchMonthlyTab('grid')" class="py-2 text-sm font-semibold rounded-lg bg-white text-indigo-600 shadow-sm transition">Grid Kehadiran</button>
                     <button type="button" id="tab-btn-summary" onclick="switchMonthlyTab('summary')" class="py-2 text-sm font-semibold rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition">Sesi & Jam</button>
                 </div>
                 
-                <!-- EMPTY STATE -->
                 <div id="monthly-empty-state" class="text-center text-gray-400 py-10 print:hidden">
                     <i class="fas fa-search text-4xl mb-3"></i><p>Pilih bulan dan klik cari.</p>
                 </div>
                 
-                <!-- CONTENT TABS -->
                 <div id="monthly-content-grid" class="hidden"></div>
                 <div id="monthly-content-summary" class="hidden"></div>
-
             </div>
         </div>
 
@@ -477,12 +594,10 @@
 
     <script>
         // =========================================================================
-        // PENGATURAN API GOOGLE APPS SCRIPT
+        // PENGATURAN API GOOGLE APPS SCRIPT (TERBARU)
         // =========================================================================
-        // Menggunakan URL Web App GAS terbaru sesuai permintaan
-        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzmB2i58mZnIfZfdSUzf0V6xuRaxALMeRmr-MzhNY29cwzZpljQxGCn4Wl8iYGHRG0z/exec";
+        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzL3KPJ8LBdk4c7mC8KsvMepCLMefmv2EiNwoQ0pu_EwwmFjKRR7BnaRPnYRaj9igIBFg/exec";
 
-        // Fungsi pembungkus untuk memanggil Google Apps Script API via fetch()
         function callAPI(action, payload = null) {
             return fetch(GAS_API_URL, {
                 method: 'POST',
@@ -491,25 +606,16 @@
             }).then(response => response.json());
         }
 
-        // =========================================================================
+        let currentUser = null; let currentUserRole = null; let currentUserNiy = null; let filledJamsThisSession = [];
+        let globalAgendas = []; let yearlyChartInstance = null; let guruChartInstance = null;
 
-        let currentUser = null;
-        let currentUserRole = null;
-        let currentUserNiy = null;
-        let filledJamsThisSession = [];
-        let yearlyChartInstance = null;
-        let guruChartInstance = null;
-
-        // Listener Global untuk mereset CSS tambahan sesaat setelah Print dialog ditutup
+        // Listener Global
         window.addEventListener('afterprint', () => { 
             if(guruChartInstance) guruChartInstance.render(); 
             const styleDynamic = document.getElementById('print-style-dynamic');
             if (styleDynamic) styleDynamic.remove();
         });
-
-        window.addEventListener('beforeprint', () => { 
-            if(guruChartInstance) guruChartInstance.render(); 
-        });
+        window.addEventListener('beforeprint', () => { if(guruChartInstance) guruChartInstance.render(); });
 
         function showToast(message) {
             const toast = document.getElementById('toast');
@@ -528,7 +634,7 @@
         function switchView(viewId) {
             document.querySelectorAll('.app-view').forEach(v => v.classList.remove('active'));
             const target = document.getElementById(viewId);
-            target.classList.add('active');
+            if(target) target.classList.add('active');
             
             const wrapper = document.getElementById('app-wrapper');
             const isDark = document.documentElement.classList.contains('dark');
@@ -549,25 +655,21 @@
             if (tab === 'grid') {
                 btnGrid.className = "py-2 text-sm font-semibold rounded-lg bg-white text-indigo-600 shadow-sm transition";
                 btnSummary.className = "py-2 text-sm font-semibold rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition";
-                contentGrid.classList.remove('hidden');
-                contentSummary.classList.add('hidden');
+                contentGrid.classList.remove('hidden'); contentSummary.classList.add('hidden');
             } else {
                 btnSummary.className = "py-2 text-sm font-semibold rounded-lg bg-white text-indigo-600 shadow-sm transition";
                 btnGrid.className = "py-2 text-sm font-semibold rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition";
-                contentSummary.classList.remove('hidden');
-                contentGrid.classList.add('hidden');
+                contentSummary.classList.remove('hidden'); contentGrid.classList.add('hidden');
             }
         }
 
         function setTanggalHariIni() {
             try {
                 const now = new Date();
-                const y = now.getFullYear();
-                const m = String(now.getMonth() + 1).padStart(2, '0');
-                const d = String(now.getDate()).padStart(2, '0');
-                document.getElementById('input-tanggal').value = `${y}-${m}-${d}`;
+                const y = now.getFullYear(); const m = String(now.getMonth() + 1).padStart(2, '0'); const d = String(now.getDate()).padStart(2, '0');
+                if(document.getElementById('input-tanggal')) document.getElementById('input-tanggal').value = `${y}-${m}-${d}`;
                 const hari = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-                document.getElementById('input-hari').value = hari[now.getDay()];
+                if(document.getElementById('input-hari')) document.getElementById('input-hari').value = hari[now.getDay()];
             } catch(e) {}
         }
 
@@ -594,116 +696,6 @@
             }, 500);
         }
 
-        function loadPublicJadwal() {
-            const container = document.getElementById('public-jadwal-container');
-            const titleEl = document.getElementById('login-jadwal-title');
-            if(!container) return;
-
-            const today = new Date();
-            
-            // Format & Tampilkan Tanggal Hari Ini di Judul Jadwal
-            if (titleEl) {
-                const options = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
-                const formattedDate = today.toLocaleDateString('id-ID', options);
-                titleEl.innerHTML = `<i class="fas fa-calendar-day mr-2 opacity-80"></i> Jadwal Guru Hari Ini [${formattedDate}]`;
-            }
-
-            if (today.getDay() === 5) {
-                container.innerHTML = `
-                    <div class="bg-white bg-opacity-20 backdrop-blur-md border border-white border-opacity-30 p-5 rounded-2xl text-white shadow-lg text-center transform transition duration-500 hover:scale-[1.02]">
-                        <div class="w-14 h-14 mx-auto bg-green-400 bg-opacity-20 rounded-full flex items-center justify-center mb-3">
-                            <i class="fas fa-mosque text-3xl text-green-300 drop-shadow-md"></i>
-                        </div>
-                        <h4 class="font-bold text-lg tracking-wide mb-1">Jumat Mubarok</h4>
-                        <p class="text-[11px] text-white text-opacity-90 leading-relaxed">Hari libur pesantren.<br>Mari perbanyak amal ibadah dan shalawat.</p>
-                    </div>`;
-                return;
-            }
-
-            container.innerHTML = `<div class="text-center text-white text-opacity-70 text-xs py-4"><i class="fas fa-spinner fa-spin mr-2"></i>Memuat jadwal...</div>`;
-
-            callAPI('getPublicJadwalHariIni').then(res => {
-                if(res && res.success && res.data && res.data.length > 0) {
-                    container.innerHTML = res.data.map(j => `
-                        <div class="bg-white bg-opacity-10 backdrop-blur-md border border-white border-opacity-20 p-3 rounded-xl text-white shadow-sm mb-2">
-                            <div class="flex justify-between items-start mb-1">
-                                <span class="font-semibold text-sm truncate w-2/3">${j.guru}</span>
-                                <span class="text-[10px] bg-white bg-opacity-20 px-2 py-0.5 rounded font-bold whitespace-nowrap">${j.jam}</span>
-                            </div>
-                            <div class="text-[11px] text-white text-opacity-80 flex justify-between">
-                                <span class="truncate pr-2">${j.mapel}</span><span class="whitespace-nowrap font-medium">${j.kelas}</span>
-                            </div>
-                        </div>`).join('');
-                } else {
-                    container.innerHTML = `<div class="bg-white bg-opacity-10 p-4 rounded-xl text-white text-opacity-80 text-center text-xs">Tidak ada jadwal hari ini</div>`;
-                }
-            }).catch(() => {
-                container.innerHTML = `<div class="text-white text-xs text-center py-2">Koneksi terputus.</div>`;
-            });
-        }
-
-        function renderDashboardData(res) {
-            const jc = document.getElementById('jadwal-container');
-            const bc = document.getElementById('belum-isi-container');
-            const ic = document.getElementById('izin-container');
-            const sac = document.getElementById('siswa-absen-container');
-
-            if(currentUserRole === 'Guru') {
-                let btnJurnal = document.getElementById('menu-isi-jurnal');
-                let hasSchedule = res.jadwal && res.jadwal.length > 0;
-                let isPending = res.belumIsi && res.belumIsi.some(g => {
-                    let rawG = String(g).trim(); let pureName = rawG.includes(" (") ? rawG.split(" (")[0].trim() : rawG;
-                    return pureName === String(currentUser).trim();
-                });
-                
-                if (new Date().getDay() === 5) { 
-                    btnJurnal.onclick = () => showToast("Hari Jumat libur, tidak ada pengisian jurnal."); 
-                    btnJurnal.classList.add('opacity-60', 'cursor-not-allowed'); 
-                }
-                else if (!hasSchedule) { btnJurnal.onclick = () => showToast("Anda tidak ada jadwal hari ini."); btnJurnal.classList.add('opacity-60', 'cursor-not-allowed'); }
-                else if (!isPending) { btnJurnal.onclick = () => showToast("Semua jurnal sudah diisi."); btnJurnal.classList.add('opacity-60', 'cursor-not-allowed'); }
-                else { btnJurnal.onclick = () => openInputJurnal(); btnJurnal.classList.remove('opacity-60', 'cursor-not-allowed'); }
-            }
-
-            if (new Date().getDay() === 5) {
-                jc.innerHTML = `
-                <div class="bg-green-50 border border-green-200 rounded-xl p-4 text-center shadow-sm">
-                    <i class="fas fa-mosque text-3xl text-green-500 mb-2"></i>
-                    <h4 class="font-bold text-green-800 text-sm">Jumat Mubarok</h4>
-                    <p class="text-xs text-green-600 mt-1">Hari libur pesantren.</p>
-                </div>`;
-            } else {
-                jc.innerHTML = (res.jadwal && res.jadwal.length) ? res.jadwal.map(j => `
-                    <div class="bg-white border border-gray-100 rounded-lg p-3 shadow-sm flex justify-between items-center border-l-4 border-l-blue-500">
-                        <div><h4 class="font-bold text-gray-800 text-sm">${j.mapel}</h4><p class="text-xs text-gray-500">${j.kelas} ${currentUserRole === 'TU' ? ' ('+j.guru+')' : ''}</p></div>
-                        <div class="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-1 rounded">${j.jam}</div>
-                    </div>`).join('') : '<div class="bg-gray-50 rounded-lg p-3 text-center text-xs text-gray-500">Tidak ada jadwal hari ini</div>';
-            }
-
-            bc.innerHTML = (res.belumIsi && res.belumIsi.length) ? res.belumIsi.map(g => `<li>• ${g}</li>`).join('') : '<li class="text-green-500"><i class="fas fa-check"></i> Semua guru sudah isi</li>';
-            ic.innerHTML = (res.izin && res.izin.length) ? res.izin.map(g => `<li>• ${g}</li>`).join('') : '<li>Tidak ada guru izin</li>';
-            
-            sac.innerHTML = (res.siswaAbsen && res.siswaAbsen.length) ? res.siswaAbsen.map(s => {
-                let badge = s.keterangan === 'Sakit' ? 'bg-yellow-100 text-yellow-700' : (s.keterangan === 'Izin' ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700');
-                return `<li class="flex justify-between items-center border-b border-gray-50 pb-2 last:border-0 last:pb-0">
-                    <div><span class="font-semibold text-gray-700">${s.nama}</span><span class="text-[10px] text-gray-400 ml-1">(${s.kelas})</span></div>
-                    <span class="text-[10px] px-2 py-0.5 rounded-full font-bold ${badge}">${s.keterangan}</span></li>`;
-            }).join('') : '<li class="text-green-500 text-xs"><i class="fas fa-check-circle"></i> Semua siswa hadir</li>';
-        }
-
-        function loadDashboardData() {
-            const jc = document.getElementById('jadwal-container');
-            const bc = document.getElementById('belum-isi-container');
-            jc.innerHTML = '<div class="text-xs text-gray-500 text-center py-2">Memuat...</div>';
-            bc.innerHTML = '<li class="text-xs text-gray-500">Memuat...</li>';
-            
-            const payloadGuru = currentUserRole === 'TU' ? 'ALL' : currentUser;
-            callAPI('getDashboardData', payloadGuru).then(res => {
-                if(res && res.success) renderDashboardData(res);
-                else jc.innerHTML = '<p class="text-xs text-red-500">Gagal memuat data</p>'; 
-            }).catch(() => { jc.innerHTML = '<p class="text-xs text-red-500">Koneksi terputus</p>'; });
-        }
-
         function handleLogin() {
             const niyInput = document.getElementById('niy');
             if(!niyInput || !niyInput.value.trim()) return showToast("NIY kosong!");
@@ -721,23 +713,26 @@
                     document.getElementById('dash-photo').src = res.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser)}&background=c7d2fe&color=3730a3&size=150&bold=true`;
                     
                     let btnJurnal = document.getElementById('menu-isi-jurnal');
+                    let btnRiwayat = document.getElementById('menu-riwayat-jurnal');
+                    let btnIzin = document.getElementById('menu-input-izin');
                     let jadwalSectionWrapper = document.getElementById('jadwal-section-wrapper');
-                    btnJurnal.onclick = () => openInputJurnal();
-                    btnJurnal.classList.remove('opacity-60', 'cursor-not-allowed');
                     
                     if (currentUserRole === 'Admin') {
                         document.getElementById('admin-menu').classList.remove('hidden');
-                        document.getElementById('menu-input-izin').style.display = 'flex';
-                        btnJurnal.style.display = 'none'; jadwalSectionWrapper.style.display = 'none';
+                        btnIzin.style.display = 'flex';
+                        btnJurnal.style.display = 'none'; btnRiwayat.style.display = 'none';
+                        jadwalSectionWrapper.style.display = 'none';
                     } else if (currentUserRole === 'TU') {
                         document.getElementById('admin-menu').classList.add('hidden');
-                        document.getElementById('menu-input-izin').style.display = 'none';
-                        btnJurnal.style.display = 'flex'; jadwalSectionWrapper.style.display = 'block';
+                        btnIzin.style.display = 'none';
+                        btnJurnal.style.display = 'flex'; btnRiwayat.style.display = 'flex';
+                        jadwalSectionWrapper.style.display = 'block';
                         document.getElementById('label-jadwal-dashboard').innerText = "Semua Jadwal Guru Hari Ini";
                     } else {
                         document.getElementById('admin-menu').classList.add('hidden');
-                        document.getElementById('menu-input-izin').style.display = 'none';
-                        btnJurnal.style.display = 'flex'; jadwalSectionWrapper.style.display = 'block';
+                        btnIzin.style.display = 'none';
+                        btnJurnal.style.display = 'flex'; btnRiwayat.style.display = 'flex';
+                        jadwalSectionWrapper.style.display = 'block';
                         document.getElementById('label-jadwal-dashboard').innerText = "Jadwal Anda Hari Ini";
                     }
 
@@ -750,14 +745,79 @@
 
                     if (res.agendas && res.agendas.success) {
                         globalAgendas = res.agendas.data || [];
-                        if (res.agendas.todayAgendas && res.agendas.todayAgendas.length > 0) {
-                            showAgendaModal(res.agendas.todayAgendas);
-                        }
-                    } else {
-                        checkTodayAgenda();
-                    }
+                        if (res.agendas.todayAgendas && res.agendas.todayAgendas.length > 0) showAgendaModal(res.agendas.todayAgendas);
+                    } else checkTodayAgenda();
+
                 } else { showToast(res ? res.message : "Gagal Login"); }
             }).catch(() => { hideLoader(); showToast("Terjadi kesalahan jaringan."); });
+        }
+
+        function loadPublicJadwal() {
+            const container = document.getElementById('public-jadwal-container');
+            const titleEl = document.getElementById('login-jadwal-title');
+            if(!container) return;
+
+            const today = new Date();
+            if (titleEl) {
+                const options = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+                titleEl.innerHTML = `<i class="fas fa-calendar-day mr-2 opacity-80"></i> Jadwal Guru Hari Ini [${today.toLocaleDateString('id-ID', options)}]`;
+            }
+
+            if (today.getDay() === 5) {
+                container.innerHTML = `<div class="bg-white bg-opacity-20 backdrop-blur-md border border-white border-opacity-30 p-5 rounded-2xl text-white shadow-lg text-center transform transition duration-500 hover:scale-[1.02]"><div class="w-14 h-14 mx-auto bg-green-400 bg-opacity-20 rounded-full flex items-center justify-center mb-3"><i class="fas fa-mosque text-3xl text-green-300 drop-shadow-md"></i></div><h4 class="font-bold text-lg tracking-wide mb-1">Jumat Mubarok</h4><p class="text-[11px] text-white text-opacity-90 leading-relaxed">Hari libur pesantren.<br>Mari perbanyak amal ibadah dan shalawat.</p></div>`;
+                return;
+            }
+
+            container.innerHTML = `<div class="text-center text-white text-opacity-70 text-xs py-4"><i class="fas fa-spinner fa-spin mr-2"></i>Memuat jadwal...</div>`;
+
+            callAPI('getPublicJadwalHariIni').then(res => {
+                if(res && res.success && res.data && res.data.length > 0) {
+                    container.innerHTML = res.data.map(j => `<div class="bg-white bg-opacity-10 backdrop-blur-md border border-white border-opacity-20 p-3 rounded-xl text-white shadow-sm mb-2"><div class="flex justify-between items-start mb-1"><span class="font-semibold text-sm truncate w-2/3">${j.guru}</span><span class="text-[10px] bg-white bg-opacity-20 px-2 py-0.5 rounded font-bold whitespace-nowrap">${j.jam}</span></div><div class="text-[11px] text-white text-opacity-80 flex justify-between"><span class="truncate pr-2">${j.mapel}</span><span class="whitespace-nowrap font-medium">${j.kelas}</span></div></div>`).join('');
+                } else container.innerHTML = `<div class="bg-white bg-opacity-10 p-4 rounded-xl text-white text-opacity-80 text-center text-xs">Tidak ada jadwal hari ini</div>`;
+            }).catch(() => container.innerHTML = `<div class="text-white text-xs text-center py-2">Koneksi terputus.</div>`);
+        }
+
+        function renderDashboardData(res) {
+            const jc = document.getElementById('jadwal-container');
+            const bc = document.getElementById('belum-isi-container');
+            const ic = document.getElementById('izin-container');
+            const sac = document.getElementById('siswa-absen-container');
+
+            if(currentUserRole === 'Guru') {
+                let btnJurnal = document.getElementById('menu-isi-jurnal');
+                let hasSchedule = res.jadwal && res.jadwal.length > 0;
+                let isPending = res.belumIsi && res.belumIsi.some(g => {
+                    let rawG = String(g).trim(); let pureName = rawG.includes(" (") ? rawG.split(" (")[0].trim() : rawG;
+                    return pureName === String(currentUser).trim();
+                });
+                
+                if (new Date().getDay() === 5) { btnJurnal.onclick = () => showToast("Hari Jumat libur."); btnJurnal.classList.add('opacity-60', 'cursor-not-allowed'); }
+                else if (!hasSchedule) { btnJurnal.onclick = () => showToast("Anda tidak ada jadwal hari ini."); btnJurnal.classList.add('opacity-60', 'cursor-not-allowed'); }
+                else if (!isPending) { btnJurnal.onclick = () => showToast("Semua jurnal sudah diisi."); btnJurnal.classList.add('opacity-60', 'cursor-not-allowed'); }
+                else { btnJurnal.onclick = () => openInputJurnal(); btnJurnal.classList.remove('opacity-60', 'cursor-not-allowed'); }
+            }
+
+            if (new Date().getDay() === 5) {
+                jc.innerHTML = `<div class="bg-green-50 border border-green-200 rounded-xl p-4 text-center shadow-sm"><i class="fas fa-mosque text-3xl text-green-500 mb-2"></i><h4 class="font-bold text-green-800 text-sm">Jumat Mubarok</h4><p class="text-xs text-green-600 mt-1">Hari libur pesantren.</p></div>`;
+            } else {
+                jc.innerHTML = (res.jadwal && res.jadwal.length) ? res.jadwal.map(j => `<div class="bg-white border border-gray-100 rounded-lg p-3 shadow-sm flex justify-between items-center border-l-4 border-l-blue-500"><div><h4 class="font-bold text-gray-800 text-sm">${j.mapel}</h4><p class="text-xs text-gray-500">${j.kelas} ${currentUserRole === 'TU' ? ' ('+j.guru+')' : ''}</p></div><div class="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-1 rounded">${j.jam}</div></div>`).join('') : '<div class="bg-gray-50 rounded-lg p-3 text-center text-xs text-gray-500">Tidak ada jadwal hari ini</div>';
+            }
+
+            bc.innerHTML = (res.belumIsi && res.belumIsi.length) ? res.belumIsi.map(g => `<li>• ${g}</li>`).join('') : '<li class="text-green-500"><i class="fas fa-check"></i> Semua guru sudah isi</li>';
+            ic.innerHTML = (res.izin && res.izin.length) ? res.izin.map(g => `<li>• ${g}</li>`).join('') : '<li>Tidak ada guru izin</li>';
+            sac.innerHTML = (res.siswaAbsen && res.siswaAbsen.length) ? res.siswaAbsen.map(s => {
+                let badge = s.keterangan === 'Sakit' ? 'bg-yellow-100 text-yellow-700' : (s.keterangan === 'Izin' ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700');
+                return `<li class="flex justify-between items-center border-b border-gray-50 pb-2 last:border-0 last:pb-0"><div><span class="font-semibold text-gray-700">${s.nama}</span><span class="text-[10px] text-gray-400 ml-1">(${s.kelas})</span></div><span class="text-[10px] px-2 py-0.5 rounded-full font-bold ${badge}">${s.keterangan}</span></li>`;
+            }).join('') : '<li class="text-green-500 text-xs"><i class="fas fa-check-circle"></i> Semua siswa hadir</li>';
+        }
+
+        function loadDashboardData() {
+            const jc = document.getElementById('jadwal-container');
+            const bc = document.getElementById('belum-isi-container');
+            jc.innerHTML = '<div class="text-xs text-gray-500 text-center py-2">Memuat...</div>';
+            bc.innerHTML = '<li class="text-xs text-gray-500">Memuat...</li>';
+            const payloadGuru = currentUserRole === 'TU' ? 'ALL' : currentUser;
+            callAPI('getDashboardData', payloadGuru).then(res => { if(res && res.success) renderDashboardData(res); }).catch(() => jc.innerHTML = '<p class="text-xs text-red-500">Koneksi terputus</p>');
         }
 
         function openInputJurnal() {
@@ -784,36 +844,24 @@
                         }
                     }
                     
-                    document.getElementById('jam-checkbox-list').innerHTML = availableJams.length ? availableJams.map(j => `
-                        <label class="flex items-center space-x-3 p-2 hover:bg-indigo-50 rounded-lg cursor-pointer">
-                            <input type="checkbox" value="${j}" class="jam-checkbox w-4 h-4 text-indigo-600 rounded" onchange="updateJamDisplay()">
-                            <span class="text-sm font-medium text-gray-700">Jam ke-${j}</span>
-                        </label>`).join('') : `<div class="p-2 text-xs text-red-500">Semua jam sudah diisi.</div>`;
+                    document.getElementById('jam-checkbox-list').innerHTML = availableJams.length ? availableJams.map(j => `<label class="flex items-center space-x-3 p-2 hover:bg-indigo-50 rounded-lg cursor-pointer"><input type="checkbox" value="${j}" class="jam-checkbox w-4 h-4 text-indigo-600 rounded" onchange="updateJamDisplay()"><span class="text-sm font-medium text-gray-700">Jam ke-${j}</span></label>`).join('') : `<div class="p-2 text-xs text-red-500">Semua jam sudah diisi.</div>`;
                     
-                    document.getElementById('jam-text').innerText = "Pilih Jam (Bisa >1)";
-                    document.getElementById('jam-text').className = "text-gray-500 text-sm truncate";
+                    document.getElementById('jam-text').innerText = "Pilih Jam"; document.getElementById('jam-text').className = "text-gray-500 text-sm truncate";
                     setTanggalHariIni(); switchView('view-input');
                 } else { showToast("Gagal memuat opsi form."); switchView('view-input'); }
             }).catch(() => { hideLoader(); showToast("Koneksi gagal."); switchView('view-input'); });
         }
 
         function toggleJamDropdown() { document.getElementById('jam-dropdown').classList.toggle('hidden'); }
-        
         function updateJamDisplay() {
             const checked = Array.from(document.querySelectorAll('.jam-checkbox:checked')).map(cb => cb.value);
             const disp = document.getElementById('jam-text');
-            if (checked.length) {
-                disp.innerText = checked.join(', ');
-                disp.classList.remove('text-gray-500'); disp.classList.add('text-indigo-700', 'font-bold');
-            } else {
-                disp.innerText = "Pilih Jam (Bisa >1)";
-                disp.classList.add('text-gray-500'); disp.classList.remove('text-indigo-700', 'font-bold');
-            }
+            if (checked.length) { disp.innerText = checked.join(', '); disp.classList.remove('text-gray-500'); disp.classList.add('text-indigo-700', 'font-bold'); } 
+            else { disp.innerText = "Pilih Jam"; disp.classList.add('text-gray-500'); disp.classList.remove('text-indigo-700', 'font-bold'); }
         }
         
         document.addEventListener('click', function(e) {
-            const drop = document.getElementById('jam-dropdown');
-            const disp = document.getElementById('jam-display');
+            const drop = document.getElementById('jam-dropdown'); const disp = document.getElementById('jam-display');
             if (drop && !drop.classList.contains('hidden') && !drop.contains(e.target) && !disp.contains(e.target)) drop.classList.add('hidden');
         });
 
@@ -832,12 +880,9 @@
                     if (res.data && res.data.length > 0) {
                         statusText.innerHTML = `<span class="text-red-600 font-semibold"><i class="fas fa-user-times mr-1"></i> Absen: ${res.data}</span>`;
                         hiddenInput.value = res.data;
-                    } else {
-                        statusText.innerHTML = `<span class="text-green-600 font-semibold"><i class="fas fa-check-circle mr-1"></i> Nihil (Semua siswa hadir)</span>`;
-                        hiddenInput.value = '';
-                    }
-                } else { statusText.innerHTML = `<span class="text-yellow-600"><i class="fas fa-exclamation-triangle mr-1"></i> Gagal mengecek data pusat. Anggap Nihil.</span>`; }
-            }).catch(() => { statusText.innerHTML = '<span class="text-red-500"><i class="fas fa-wifi mr-1"></i> Koneksi gagal terhubung.</span>'; });
+                    } else { statusText.innerHTML = `<span class="text-green-600 font-semibold"><i class="fas fa-check-circle mr-1"></i> Nihil (Semua siswa hadir)</span>`; }
+                } else statusText.innerHTML = `<span class="text-yellow-600"><i class="fas fa-exclamation-triangle mr-1"></i> Gagal mengecek. Anggap Nihil.</span>`;
+            }).catch(() => statusText.innerHTML = '<span class="text-red-500"><i class="fas fa-wifi mr-1"></i> Koneksi terputus.</span>');
         }
 
         function submitJournal() {
@@ -867,13 +912,10 @@
             callAPI('saveJournal', data).then(res => {
                 hideLoader();
                 if (res && res.success) {
-                    showToast("Jurnal disimpan!");
-                    document.getElementById('journalForm').reset();
-                    filledJamsThisSession.push(...jams);
-                    document.getElementById('otomatis-absen-container').classList.add('hidden');
-                    updateJamDisplay(); switchView('view-dashboard');
-                    setTimeout(() => { loadDashboardData(); }, 1000);
-                } else { showToast("Gagal menyimpan."); }
+                    showToast("Jurnal disimpan!"); document.getElementById('journalForm').reset();
+                    filledJamsThisSession.push(...jams); document.getElementById('otomatis-absen-container').classList.add('hidden');
+                    updateJamDisplay(); switchView('view-dashboard'); setTimeout(() => loadDashboardData(), 1000);
+                } else showToast("Gagal menyimpan.");
             }).catch(() => { hideLoader(); showToast("Koneksi terputus."); });
         }
 
@@ -890,705 +932,346 @@
         }
 
         function submitIzin() {
-            const data = {
-                tanggal: document.getElementById('izin-tanggal').value,
-                namaGuru: document.getElementById('izin-guru').value,
-                keterangan: document.getElementById('izin-keterangan').value
-            };
+            const data = { tanggal: document.getElementById('izin-tanggal').value, namaGuru: document.getElementById('izin-guru').value, keterangan: document.getElementById('izin-keterangan').value };
             if(!data.namaGuru) return showToast("Pilih guru!");
-
             showLoader("Menyimpan...");
             callAPI('saveIzin', data).then(res => {
                 hideLoader();
-                if (res && res.success) {
-                    showToast("Izin disimpan!"); document.getElementById('izinForm').reset();
-                    switchView('view-dashboard'); setTimeout(() => loadDashboardData(), 1000);
-                } else showToast("Gagal menyimpan.");
+                if (res && res.success) { showToast("Izin disimpan!"); document.getElementById('izinForm').reset(); switchView('view-dashboard'); setTimeout(() => loadDashboardData(), 1000); } 
+                else showToast("Gagal menyimpan.");
             }).catch(() => { hideLoader(); showToast("Koneksi gagal."); });
         }
 
-        // --- FITUR KALENDER PENDIDIKAN ---
+        function openHistory() {
+            switchView('view-history');
+            const container = document.getElementById('history-container');
+            container.innerHTML = '<div class="text-center text-gray-400 py-10"><i class="fas fa-spinner fa-spin text-2xl mb-2"></i><br>Memuat riwayat...</div>';
+            
+            callAPI('getHistory', currentUser).then(res => {
+                if (res && res.success) {
+                    if (res.data.length === 0) {
+                        container.innerHTML = '<div class="text-center text-gray-400 py-10"><i class="fas fa-folder-open text-3xl mb-3"></i><p class="text-xs">Belum ada riwayat jurnal.</p></div>';
+                        return;
+                    }
+                    container.innerHTML = res.data.map(item => `
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col relative overflow-hidden">
+                            <div class="absolute top-0 left-0 w-1 h-full bg-indigo-500"></div>
+                            <div class="flex justify-between items-start mb-2 pl-2">
+                                <div><h4 class="font-bold text-gray-800 text-sm leading-tight">${item.mapel}</h4><p class="text-[10px] text-gray-500 flex items-center mt-0.5"><i class="fas fa-clock mr-1"></i> ${item.tanggal} (${item.jam})</p></div>
+                                <span class="bg-indigo-50 text-indigo-700 text-[10px] font-bold px-2 py-1 rounded border border-indigo-100">${item.kelas}</span>
+                            </div>
+                            <div class="bg-gray-50 p-2 rounded text-xs text-gray-700 border border-gray-100 mt-1 pl-3"><span class="font-semibold text-gray-500 text-[10px] block mb-0.5">Materi:</span>${item.materi}</div>
+                        </div>
+                    `).join('');
+                } else container.innerHTML = '<div class="text-center text-red-500 text-xs py-4">Gagal memuat riwayat.</div>';
+            }).catch(() => container.innerHTML = '<div class="text-center text-red-500 text-xs py-4">Koneksi terputus.</div>');
+        }
+
+        function openJurnalKelas() {
+            switchView('view-jurnal-kelas');
+            document.getElementById('filter-jk-tanggal').valueAsDate = new Date();
+            
+            const jkKelas = document.getElementById('filter-jk-kelas');
+            if (jkKelas.options.length <= 1) {
+                callAPI('getFormOptions', {role: 'Admin', namaGuru: ''}).then(res => {
+                    if (res && res.success && res.kelas) jkKelas.innerHTML = '<option value="">Pilih Kelas</option>' + res.kelas.map(k => `<option value="${k}">${k}</option>`).join('');
+                });
+            }
+        }
+
+        function loadJurnalKelas() {
+            const tanggal = document.getElementById('filter-jk-tanggal').value; const kelas = document.getElementById('filter-jk-kelas').value;
+            if (!tanggal || !kelas) return showToast("Pilih tanggal dan kelas!");
+
+            const container = document.getElementById('jk-result-container');
+            container.innerHTML = '<div class="text-center text-gray-400 py-10"><i class="fas fa-spinner fa-spin text-2xl mb-2"></i><br>Mencari jurnal kelas...</div>';
+            
+            callAPI('getJurnalKelas', { tanggal: tanggal, kelas: kelas }).then(res => {
+                if (res && res.success) {
+                    if (res.data.length === 0) {
+                        container.innerHTML = `<div class="text-center text-gray-400 py-10"><i class="fas fa-search text-3xl mb-3 text-gray-300"></i><p class="text-xs">Tidak ada KBM di kelas ${kelas}<br>pada tanggal tersebut.</p></div>`; return;
+                    }
+                    container.innerHTML = res.data.map((item, idx) => `
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-emerald-100 flex flex-col">
+                            <div class="flex justify-between items-start mb-2 border-b border-gray-50 pb-2">
+                                <div class="flex items-center"><div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-xs mr-2">${idx+1}</div>
+                                <div><h4 class="font-bold text-gray-800 text-sm leading-tight">${item.mapel}</h4><p class="text-[10px] text-emerald-600 font-semibold mt-0.5">${item.guru}</p></div></div>
+                                <span class="bg-gray-100 text-gray-600 text-[10px] font-bold px-2 py-1 rounded">${item.jam}</span>
+                            </div>
+                            <div class="text-xs text-gray-700 mb-2"><span class="font-semibold block text-gray-500 text-[10px] uppercase">Materi Diajarkan:</span> ${item.materi}</div>
+                            ${item.absen ? `<div class="bg-red-50 p-2 rounded text-[10px] text-red-700 border border-red-100"><i class="fas fa-user-times mr-1"></i> <b>Siswa Absen:</b> ${item.absen}</div>` : `<div class="bg-green-50 p-2 rounded text-[10px] text-green-700 border border-green-100"><i class="fas fa-check mr-1"></i> Semua Siswa Hadir</div>`}
+                        </div>
+                    `).join('');
+                } else container.innerHTML = '<div class="text-center text-red-500 text-xs py-4">Gagal memuat buku kelas.</div>';
+            }).catch(() => container.innerHTML = '<div class="text-center text-red-500 text-xs py-4">Koneksi terputus.</div>');
+        }
+
+        function openWaSettings() {
+            showLoader("Memuat pengaturan...");
+            callAPI('getWaSettings').then(res => {
+                hideLoader();
+                if (res && res.success) {
+                    document.getElementById('wa-aktif').checked = (res.data.aktif === 'true');
+                    document.getElementById('wa-token').value = res.data.token || '';
+                    document.getElementById('wa-jam').value = res.data.jam || '14';
+                    document.getElementById('wa-template').value = res.data.template || `Halo *{nama_guru}*,\n\nKami mengingatkan bahwa Anda masih memiliki tagihan *Jurnal Kelas KBM* yang belum diisi untuk hari ini.\n\nMohon untuk segera melengkapinya.\n\nTerima kasih.`;
+                    switchView('view-wa-settings');
+                } else showToast("Gagal memuat pengaturan.");
+            }).catch(() => { hideLoader(); showToast("Koneksi terputus."); });
+        }
+
+        function submitWaSettings() {
+            const data = {
+                aktif: document.getElementById('wa-aktif').checked ? 'true' : 'false',
+                token: document.getElementById('wa-token').value,
+                jam: document.getElementById('wa-jam').value,
+                template: document.getElementById('wa-template').value
+            };
+            showLoader("Menyimpan...");
+            callAPI('saveWaSettings', data).then(res => {
+                hideLoader();
+                if(res && res.success) { showToast("Pengaturan WA disimpan!"); switchView('view-dashboard'); } 
+                else showToast("Gagal menyimpan pengaturan.");
+            }).catch(() => { hideLoader(); showToast("Koneksi gagal."); });
+        }
+
+        // --- Fungsi Kalender ---
         function checkTodayAgenda() {
-            callAPI('getAgendas').then(res => {
-                if(res && res.success && res.todayAgendas && res.todayAgendas.length > 0) {
-                    showAgendaModal(res.todayAgendas);
-                }
-            }).catch(e => console.log("Gagal cek agenda", e));
+            callAPI('getAgendas').then(res => { if(res && res.success && res.todayAgendas && res.todayAgendas.length > 0) showAgendaModal(res.todayAgendas); }).catch(e => console.log(e));
         }
-
         function showAgendaModal(agendas) {
-            const modal = document.getElementById('agendaModal');
-            const content = document.getElementById('agenda-modal-content');
-            const dateEl = document.getElementById('agenda-modal-date');
-            
-            const today = new Date();
-            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            dateEl.innerText = today.toLocaleDateString('id-ID', options);
-            
-            content.innerHTML = agendas.map(a => `
-                <div class="mb-2 last:mb-0 bg-white p-2.5 rounded-lg border-l-4 border-teal-500 shadow-sm text-left">
-                    <h4 class="font-bold text-gray-800 text-[11px] leading-tight">${a.judul}</h4>
-                    ${a.keterangan ? `<p class="text-[10px] text-gray-600 mt-0.5 leading-snug">${a.keterangan}</p>` : ''}
-                </div>
-            `).join('');
-            
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                modal.classList.remove('opacity-0');
-                modal.querySelector('div').classList.remove('scale-95');
-                modal.querySelector('div').classList.add('scale-100');
-            }, 10);
+            const modal = document.getElementById('agendaModal'); const content = document.getElementById('agenda-modal-content'); const dateEl = document.getElementById('agenda-modal-date');
+            dateEl.innerText = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            content.innerHTML = agendas.map(a => `<div class="mb-2 last:mb-0 bg-white p-2.5 rounded-lg border-l-4 border-teal-500 shadow-sm text-left"><h4 class="font-bold text-gray-800 text-[11px] leading-tight">${a.judul}</h4>${a.keterangan ? `<p class="text-[10px] text-gray-600 mt-0.5 leading-snug">${a.keterangan}</p>` : ''}</div>`).join('');
+            modal.classList.remove('hidden'); setTimeout(() => { modal.classList.remove('opacity-0'); modal.querySelector('div').classList.remove('scale-95'); modal.querySelector('div').classList.add('scale-100'); }, 10);
         }
-
         function closeAgendaModal() {
-            const modal = document.getElementById('agendaModal');
-            modal.classList.add('opacity-0');
-            modal.querySelector('div').classList.remove('scale-100');
-            modal.querySelector('div').classList.add('scale-95');
+            const modal = document.getElementById('agendaModal'); modal.classList.add('opacity-0'); modal.querySelector('div').classList.remove('scale-100'); modal.querySelector('div').classList.add('scale-95');
             setTimeout(() => modal.classList.add('hidden'), 300);
         }
 
         let currentDateView = new Date();
-        let globalAgendas = [];
-
         function openKalender() {
             switchView('view-kalender');
-            if(currentUserRole === 'Admin') {
-                document.getElementById('admin-agenda-form').classList.remove('hidden');
-                document.getElementById('agenda-tanggal').valueAsDate = new Date();
-            } else {
-                document.getElementById('admin-agenda-form').classList.add('hidden');
-            }
-            
+            if(currentUserRole === 'Admin') { document.getElementById('admin-agenda-form').classList.remove('hidden'); document.getElementById('agenda-tanggal').valueAsDate = new Date(); } 
+            else document.getElementById('admin-agenda-form').classList.add('hidden');
             currentDateView = new Date(); 
-            
-            if (globalAgendas && globalAgendas.length > 0) {
-                renderCalendar();
-                renderAgendaList();
-            } else {
-                loadAgendas();
-            }
+            if (globalAgendas && globalAgendas.length > 0) { renderCalendar(); renderAgendaList(); } else loadAgendas();
         }
 
         function loadAgendas() {
-            const container = document.getElementById('agenda-list-container');
-            const grid = document.getElementById('calendar-grid');
-            
+            const container = document.getElementById('agenda-list-container'); const grid = document.getElementById('calendar-grid');
             container.innerHTML = '<div class="text-center text-gray-400 py-4 text-xs"><i class="fas fa-spinner fa-spin mr-1"></i> Memuat daftar agenda...</div>';
             grid.innerHTML = '<div class="col-span-7 text-center text-gray-400 py-6 text-xs"><i class="fas fa-spinner fa-spin"></i></div>';
-            
             callAPI('getAgendas').then(res => {
-                if(res && res.success) {
-                    globalAgendas = res.data || [];
-                    renderCalendar();
-                    renderAgendaList();
-                } else {
-                    container.innerHTML = '<div class="text-center text-red-400 py-4 text-xs">Gagal memuat agenda.</div>';
-                    grid.innerHTML = '<div class="col-span-7 text-center text-red-400 py-4 text-xs">Gagal memuat kalender.</div>';
-                }
-            }).catch(() => {
-                container.innerHTML = '<div class="text-center text-red-400 py-4 text-xs">Koneksi terputus.</div>';
-                grid.innerHTML = '<div class="col-span-7 text-center text-red-400 py-4 text-xs">Koneksi terputus.</div>';
-            });
+                if(res && res.success) { globalAgendas = res.data || []; renderCalendar(); renderAgendaList(); } 
+                else { container.innerHTML = '<div class="text-center text-red-400 py-4 text-xs">Gagal memuat agenda.</div>'; grid.innerHTML = '<div class="col-span-7 text-center text-red-400 py-4 text-xs">Gagal.</div>'; }
+            }).catch(() => { container.innerHTML = '<div class="text-center text-red-400 py-4 text-xs">Koneksi terputus.</div>'; grid.innerHTML = '<div class="col-span-7 text-center text-red-400 py-4 text-xs">Koneksi terputus.</div>'; });
         }
 
-        function changeMonth(direction) {
-            currentDateView.setMonth(currentDateView.getMonth() + direction);
-            renderCalendar();
-            renderAgendaList();
-        }
+        function changeMonth(direction) { currentDateView.setMonth(currentDateView.getMonth() + direction); renderCalendar(); renderAgendaList(); }
 
         function renderCalendar() {
-            const year = currentDateView.getFullYear();
-            const month = currentDateView.getMonth();
-            const today = new Date();
-
-            const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-            document.getElementById('calendar-month-year').innerText = `${monthNames[month]} ${year}`;
-
-            const firstDay = new Date(year, month, 1).getDay();
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
-
+            const year = currentDateView.getFullYear(); const month = currentDateView.getMonth(); const today = new Date();
+            document.getElementById('calendar-month-year').innerText = `${["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"][month]} ${year}`;
+            const firstDay = new Date(year, month, 1).getDay(); const daysInMonth = new Date(year, month + 1, 0).getDate();
             let gridHtml = '';
-
-            for (let i = 0; i < firstDay; i++) {
-                gridHtml += `<div class="aspect-square flex items-center justify-center p-1"></div>`;
-            }
-
+            for (let i = 0; i < firstDay; i++) gridHtml += `<div class="aspect-square p-1"></div>`;
             for (let day = 1; day <= daysInMonth; day++) {
                 const dateStr = `${year}-${String(month+1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                
-                const dayAgendas = globalAgendas.filter(a => a.tanggal === dateStr);
-                const hasAgenda = dayAgendas.length > 0;
-                
-                let dotHtml = '';
-                if (hasAgenda) {
-                    dotHtml = `<div class="w-1.5 h-1.5 rounded-full bg-teal-500 absolute bottom-1 shadow-sm"></div>`; 
-                }
-
+                const hasAgenda = globalAgendas.some(a => a.tanggal === dateStr);
                 const isToday = (day === today.getDate() && month === today.getMonth() && year === today.getFullYear());
                 const isFriday = new Date(year, month, day).getDay() === 5; 
-                
-                let baseClasses = "relative flex flex-col items-center justify-center aspect-square rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-100 ";
+                let baseClasses = "relative flex flex-col items-center justify-center aspect-square rounded-xl cursor-pointer hover:bg-gray-100 ";
                 let textClasses = isFriday ? "text-red-500 font-bold" : "text-gray-700 font-medium";
-
-                if (isToday) {
-                    baseClasses += "border-2 border-teal-500 bg-teal-50 shadow-inner ";
-                    textClasses = "text-teal-800 font-extrabold";
-                } else if (hasAgenda) {
-                    textClasses += " font-bold";
-                }
-
-                gridHtml += `
-                    <div class="${baseClasses}" onclick="scrollToAgenda('${dateStr}')">
-                        <span class="${textClasses} text-lg mb-1">${day}</span>
-                        ${dotHtml}
-                    </div>`;
+                if (isToday) { baseClasses += "border-2 border-teal-500 bg-teal-50 shadow-inner "; textClasses = "text-teal-800 font-extrabold"; } 
+                else if (hasAgenda) textClasses += " font-bold";
+                gridHtml += `<div class="${baseClasses}" onclick="scrollToAgenda('${dateStr}')"><span class="${textClasses} text-lg mb-1">${day}</span>${hasAgenda ? `<div class="w-1.5 h-1.5 rounded-full bg-teal-500 absolute bottom-1 shadow-sm"></div>` : ''}</div>`;
             }
             document.getElementById('calendar-grid').innerHTML = gridHtml;
         }
 
         function renderAgendaList() {
-            const container = document.getElementById('agenda-list-container');
-            const year = currentDateView.getFullYear();
-            const month = currentDateView.getMonth();
-
-            const monthlyAgendas = globalAgendas.filter(a => {
-                const d = new Date(a.tanggal);
-                return d.getFullYear() === year && d.getMonth() === month;
-            });
-
-            if(monthlyAgendas.length === 0) {
-                 container.innerHTML = '<div class="bg-white p-4 rounded-xl shadow-sm text-center text-gray-500 text-xs border border-gray-100">Tidak ada kegiatan di bulan ini.</div>';
-                 return;
-            }
-
+            const container = document.getElementById('agenda-list-container'); const year = currentDateView.getFullYear(); const month = currentDateView.getMonth();
+            const monthlyAgendas = globalAgendas.filter(a => new Date(a.tanggal).getFullYear() === year && new Date(a.tanggal).getMonth() === month);
+            if(monthlyAgendas.length === 0) return container.innerHTML = '<div class="bg-white p-4 rounded-xl shadow-sm text-center text-gray-500 text-xs border border-gray-100">Tidak ada kegiatan di bulan ini.</div>';
             container.innerHTML = monthlyAgendas.map(a => {
                 const d = new Date(a.tanggal);
-                const monthShort = new Intl.DateTimeFormat('id-ID', { month: 'short' }).format(d);
-                const day = d.getDate();
-                const dayName = new Intl.DateTimeFormat('id-ID', { weekday: 'long' }).format(d);
-
-                return `
-                <div id="agenda-${a.tanggal}" class="flex items-start mb-3 bg-white p-3.5 rounded-xl shadow-sm border border-gray-100 transition-all duration-300">
-                    <div class="flex flex-col items-center justify-center min-w-[3.5rem] p-1.5 border border-gray-200 rounded-lg mr-3 bg-gray-50 shadow-inner">
-                        <span class="text-[10px] text-gray-500 font-medium uppercase tracking-wider">${monthShort}</span>
-                        <span class="text-xl font-bold text-teal-600 leading-none mt-0.5">${day}</span>
-                    </div>
-                    <div class="flex-1 pt-0.5">
-                        <h4 class="font-bold text-gray-800 text-sm leading-tight">${a.judul}</h4>
-                        <p class="text-[11px] text-gray-500 mt-1.5 flex items-center"><i class="fas fa-calendar-day mr-1.5 opacity-70"></i> ${dayName}, ${d.toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'})}</p>
-                        ${a.keterangan ? `<div class="mt-2 text-[11px] text-gray-600 bg-gray-50 p-2 rounded border border-gray-100 flex items-start"><i class="fas fa-info-circle mt-0.5 mr-1.5 text-gray-400"></i><span class="leading-relaxed">${a.keterangan}</span></div>` : ''}
-                    </div>
-                </div>`;
+                return `<div id="agenda-${a.tanggal}" class="flex items-start mb-3 bg-white p-3.5 rounded-xl shadow-sm border border-gray-100"><div class="flex flex-col items-center justify-center min-w-[3.5rem] p-1.5 border border-gray-200 rounded-lg mr-3 bg-gray-50"><span class="text-[10px] text-gray-500 font-medium uppercase">${new Intl.DateTimeFormat('id-ID', { month: 'short' }).format(d)}</span><span class="text-xl font-bold text-teal-600 mt-0.5">${d.getDate()}</span></div><div class="flex-1 pt-0.5"><h4 class="font-bold text-gray-800 text-sm leading-tight">${a.judul}</h4><p class="text-[11px] text-gray-500 mt-1.5 flex items-center"><i class="fas fa-calendar-day mr-1.5 opacity-70"></i> ${new Intl.DateTimeFormat('id-ID', { weekday: 'long' }).format(d)}, ${d.toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'})}</p>${a.keterangan ? `<div class="mt-2 text-[11px] text-gray-600 bg-gray-50 p-2 rounded border border-gray-100">${a.keterangan}</div>` : ''}</div></div>`;
             }).join('');
         }
 
         function scrollToAgenda(dateStr) {
             const el = document.getElementById(`agenda-${dateStr}`);
-            if(el) {
-                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                el.classList.add('ring-2', 'ring-teal-400', 'bg-teal-50');
-                setTimeout(() => {
-                    el.classList.remove('ring-2', 'ring-teal-400', 'bg-teal-50');
-                }, 1500);
-            } else {
-                const d = new Date(dateStr);
-                const formatted = d.toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'});
-                showToast(`Tidak ada kegiatan di tanggal ${formatted}`);
-            }
+            if(el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.classList.add('ring-2', 'ring-teal-400', 'bg-teal-50'); setTimeout(() => el.classList.remove('ring-2', 'ring-teal-400', 'bg-teal-50'), 1500); } 
+            else showToast(`Tidak ada kegiatan di tanggal tersebut`);
         }
 
         function submitAgenda() {
-            const data = {
-                tanggal: document.getElementById('agenda-tanggal').value,
-                judul: document.getElementById('agenda-judul').value,
-                keterangan: document.getElementById('agenda-keterangan').value
-            };
+            const data = { tanggal: document.getElementById('agenda-tanggal').value, judul: document.getElementById('agenda-judul').value, keterangan: document.getElementById('agenda-keterangan').value };
             if(!data.tanggal || !data.judul) return showToast("Tanggal dan Judul wajib diisi!");
-            
-            showLoader("Menyimpan agenda...");
+            showLoader("Menyimpan...");
             callAPI('saveAgenda', data).then(res => {
                 hideLoader();
-                if(res && res.success) {
-                    showToast("Agenda berhasil disimpan!");
-                    document.getElementById('agendaForm').reset();
-                    currentDateView = new Date(data.tanggal);
-                    loadAgendas();
-                } else showToast("Gagal menyimpan agenda.");
+                if(res && res.success) { showToast("Agenda disimpan!"); document.getElementById('agendaForm').reset(); currentDateView = new Date(data.tanggal); loadAgendas(); } 
+                else showToast("Gagal menyimpan.");
             }).catch(() => { hideLoader(); showToast("Koneksi gagal."); });
         }
-        // --- END KALENDER PENDIDIKAN ---
 
+        // --- Fungsi Rekap (Bulanan & Tahunan) ---
         function loadMonthlyRecap() {
             const bulan = document.getElementById('filter-month').value;
             if (!bulan) return showToast("Pilih bulan");
-            
             showLoader("Memuat rekap...");
             callAPI('getMonthlyRecap', bulan).then(res => {
                 hideLoader();
                 if (res && res.success) {
-                    // Sembunyikan state kosong dan tampilkan tab
                     document.getElementById('monthly-empty-state').classList.add('hidden');
-                    document.getElementById('monthly-tabs').classList.remove('hidden');
-                    document.getElementById('monthly-tabs').classList.add('grid');
-                    
+                    document.getElementById('monthly-tabs').classList.remove('hidden'); document.getElementById('monthly-tabs').classList.add('grid');
                     const bulanFormat = new Date(bulan + '-01').toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
                     
-                    // --- MEMBUAT HTML UNTUK TAB GRID (Kiri) ---
-                    let gridHtml = `
-                    <div id="print-header-grid" class="hidden print:block w-full mb-4" style="break-after: avoid; page-break-after: avoid;">
-                        <div class="flex items-center mb-4">
-                            <div class="mr-4"><img src="https://i.ibb.co.com/PvyzRgq9/Logo-SMP-Unggulan-Abu-Zairi.png" alt="Logo SMP" class="w-16 h-16 object-contain"></div>
-                            <div class="flex-1">
-                                <h2 class="text-xl font-bold text-gray-900 leading-tight">Rekapitulasi Kehadiran Bulanan Guru<br>SMP Unggulan Abu Zairi</h2>
-                                <p class="text-gray-800 font-semibold mt-1">Periode: ${bulanFormat}</p>
-                                <p class="text-gray-600 text-xs font-medium uppercase tracking-wider mt-1">Laporan Detail Grid Kehadiran Harian</p>
-                            </div>
-                        </div>
-                        <div class="w-full border-b-2 border-gray-900"></div>
-                    </div>`;
+                    // HTML Grid
+                    let gridHtml = `<div id="print-header-grid" class="hidden print:block w-full mb-4"><div class="flex items-center mb-4"><div class="mr-4"><img src="https://i.ibb.co.com/PvyzRgq9/Logo-SMP-Unggulan-Abu-Zairi.png" alt="Logo SMP" class="w-16 h-16 object-contain"></div><div class="flex-1"><h2 class="text-xl font-bold text-gray-900">Rekapitulasi Kehadiran Bulanan Guru<br>SMP Unggulan Abu Zairi</h2><p class="text-gray-800 font-semibold mt-1">Periode: ${bulanFormat}</p></div></div><div class="w-full border-b-2 border-gray-900"></div></div>`;
 
-                    if (res.guruTeladan && res.guruTeladan.length) {
-                        gridHtml += `<div class="bg-gradient-to-r from-yellow-400 to-orange-500 p-4 rounded-xl shadow-md mb-4 text-white print:hidden"><h3 class="font-bold text-sm flex items-center"><i class="fas fa-trophy mr-2"></i> Guru Teladan Bulan Ini</h3><p class="text-[10px] opacity-90 mb-2">Hadir penuh tanpa izin/sakit/alpa.</p><div class="space-y-1">` + res.guruTeladan.map(g => `<div class="text-xs font-semibold flex items-center"><i class="fas fa-star text-yellow-200 mr-2 text-[10px]"></i> ${g}</div>`).join('') + `</div></div>`;
-                    }
+                    if (res.guruTeladan && res.guruTeladan.length) gridHtml += `<div class="bg-gradient-to-r from-yellow-400 to-orange-500 p-4 rounded-xl shadow-md mb-4 text-white print:hidden"><h3 class="font-bold text-sm flex items-center"><i class="fas fa-trophy mr-2"></i> Guru Teladan Bulan Ini</h3><p class="text-[10px] opacity-90 mb-2">Hadir penuh tanpa izin/sakit/alpa.</p><div class="space-y-1">` + res.guruTeladan.map(g => `<div class="text-xs font-semibold flex items-center"><i class="fas fa-star text-yellow-200 mr-2 text-[10px]"></i> ${g}</div>`).join('') + `</div></div>`;
                     
                     if (res.gridKehadiran) {
-                        const parts = bulan.split("-");
-                        const y = parseInt(parts[0], 10);
-                        const m = parseInt(parts[1], 10);
-                        const daysInMonth = new Date(y, m, 0).getDate();
-                        
-                        gridHtml += `<div class="bg-white border border-gray-200 p-4 rounded-xl shadow-sm mb-4 print:p-0 print:shadow-none print:border-none print:mb-0" style="break-before: avoid; page-break-before: avoid;">
-                            <div class="flex justify-between items-center mb-2 print:hidden">
-                                <h3 class="font-bold text-sm text-gray-800">Tabel Detail Bulanan</h3>
-                                <button type="button" onclick="copyTableToClipboard('tabel-detail-bulanan')" class="text-[10px] bg-white border border-gray-200 text-gray-600 hover:bg-gray-100 px-2 py-1 rounded shadow-sm transition"><i class="fas fa-copy mr-1"></i>Salin</button>
-                            </div>
-                            <div class="flex flex-wrap items-center gap-2 text-[10px] mb-3 p-2 bg-blue-50 text-blue-800 rounded-lg border border-blue-100 print:bg-transparent print:border-none print:p-0 print:mb-2">
-                                <span class="font-bold"><i class="fas fa-info-circle mr-1"></i>Petunjuk:</span>
-                                <span class="font-bold text-green-600">v = Hadir</span>
-                                <span class="font-bold text-yellow-600">I = Izin</span>
-                                <span class="font-bold text-blue-600">S = Sakit</span>
-                                <span class="font-bold text-red-600">A = Alpa</span>
-                                <span class="font-bold text-purple-600">DL = Dinas Luar</span>
-                                <span class="font-bold text-gray-600">C = Cuti</span>
-                                <span class="flex items-center ml-2"><span class="w-3 h-3 bg-red-50 border border-red-100 inline-block mr-1"></span> Libur</span>
-                                <span class="flex items-center ml-2"><span class="w-3 h-3 bg-amber-100 border border-amber-300 inline-block mr-1"></span><span class="font-bold text-amber-600">AG = Agenda (Event)</span></span>
-                            </div>
-                            <div class="overflow-x-auto custom-scrollbar border border-gray-200 rounded-lg shadow-inner print:shadow-none print:border-none print:overflow-visible">
-                                <table id="tabel-detail-bulanan" class="min-w-full text-[10px] text-center border-collapse print:border print:border-gray-300">
-                                    <thead>
-                                        <tr class="bg-gray-100 text-gray-700 print:bg-gray-100">
-                                            <th class="border border-gray-200 print:border-gray-300 py-2 px-3 sticky left-0 bg-gray-100 print:bg-gray-100 z-10 min-w-[120px] text-left shadow-[2px_0_4px_rgba(0,0,0,0.05)] print:shadow-none">Nama Guru</th>`;
-                                            
+                        const parts = bulan.split("-"); const y = parseInt(parts[0], 10); const m = parseInt(parts[1], 10); const daysInMonth = new Date(y, m, 0).getDate();
+                        gridHtml += `<div class="bg-white border border-gray-200 p-4 rounded-xl shadow-sm mb-4 print:p-0 print:border-none print:shadow-none"><div class="flex justify-between items-center mb-2 print:hidden"><h3 class="font-bold text-sm text-gray-800">Tabel Detail Bulanan</h3><button onclick="copyTableToClipboard('tabel-detail-bulanan')" class="text-[10px] bg-white border border-gray-200 text-gray-600 hover:bg-gray-100 px-2 py-1 rounded shadow-sm">Salin</button></div><div class="overflow-x-auto custom-scrollbar border border-gray-200 rounded-lg print:border-none print:overflow-visible"><table id="tabel-detail-bulanan" class="min-w-full text-[10px] text-center border-collapse print:border print:border-gray-300"><thead><tr class="bg-gray-100 text-gray-700 print:bg-gray-100"><th class="border border-gray-200 print:border-gray-300 py-2 px-3 sticky left-0 bg-gray-100 z-10 min-w-[120px] text-left">Nama Guru</th>`;
                         for (let d = 1; d <= daysInMonth; d++) {
-                            let hasEvent = res.agendaBulanIni && res.agendaBulanIni[d];
-                            let isFriday = new Date(y, m - 1, d).getDay() === 5;
-                            let bgClass = isFriday ? 'bg-red-100 text-red-600 font-bold' : (hasEvent ? 'bg-amber-200 text-amber-900 font-bold' : 'bg-gray-50');
-                            gridHtml += `<th class="border border-gray-200 print:border-gray-300 py-1.5 px-1 min-w-[24px] ${bgClass}" ${hasEvent ? `title="${hasEvent}"` : ''}>${d}</th>`;
+                            let hasEvent = res.agendaBulanIni && res.agendaBulanIni[d]; let isFriday = new Date(y, m - 1, d).getDay() === 5;
+                            gridHtml += `<th class="border border-gray-200 print:border-gray-300 py-1.5 px-1 min-w-[24px] ${isFriday ? 'bg-red-100 text-red-600' : (hasEvent ? 'bg-amber-200 text-amber-900' : 'bg-gray-50')}">${d}</th>`;
                         }
+                        gridHtml += `<th class="border border-gray-200 py-2 px-1 min-w-[28px] bg-green-50 text-green-700">H</th><th class="border border-gray-200 py-2 px-1 min-w-[28px] bg-yellow-50 text-yellow-700">I</th><th class="border border-gray-200 py-2 px-1 min-w-[28px] bg-blue-50 text-blue-700">S</th><th class="border border-gray-200 py-2 px-1 min-w-[28px] bg-red-50 text-red-700">A</th></tr></thead><tbody class="divide-y divide-gray-100">`;
                         
-                        gridHtml += `       <th class="border border-gray-200 print:border-gray-300 py-2 px-1 min-w-[28px] bg-green-50 text-green-700">H</th>
-                                            <th class="border border-gray-200 print:border-gray-300 py-2 px-1 min-w-[28px] bg-yellow-50 text-yellow-700">I</th>
-                                            <th class="border border-gray-200 print:border-gray-300 py-2 px-1 min-w-[28px] bg-blue-50 text-blue-700">S</th>
-                                            <th class="border border-gray-200 print:border-gray-300 py-2 px-1 min-w-[28px] bg-red-50 text-red-700">A</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="divide-y divide-gray-100">`;
-
-                        let sortedGurus = Object.keys(res.gridKehadiran).sort();
-                        sortedGurus.forEach(guru => {
+                        Object.keys(res.gridKehadiran).sort().forEach(guru => {
                             let dataG = res.gridKehadiran[guru];
-                            gridHtml += `<tr class="hover:bg-gray-50 transition">
-                                <td class="border border-gray-200 print:border-gray-300 py-1.5 px-3 sticky left-0 bg-white z-10 text-left font-medium text-gray-700 whitespace-nowrap shadow-[2px_0_4px_rgba(0,0,0,0.05)] print:shadow-none">${guru}</td>`;
-                            
+                            gridHtml += `<tr><td class="border border-gray-200 print:border-gray-300 py-1.5 px-3 sticky left-0 bg-white z-10 text-left font-medium text-gray-700 whitespace-nowrap">${guru}</td>`;
                             for (let d = 1; d <= daysInMonth; d++) {
-                                let status = dataG.detail[d];
-                                let isFriday = new Date(y, m - 1, d).getDay() === 5;
-                                let hasEvent = res.agendaBulanIni && res.agendaBulanIni[d];
-                                
-                                let cellClass = 'border border-gray-200 print:border-gray-300';
-                                let content = '';
-                                let tooltip = '';
-                                
-                                if (status === 'v') { content = 'v'; cellClass += ' bg-green-100 text-green-700 font-bold'; }
-                                else if (status === 'S') { content = 'S'; cellClass += ' bg-blue-100 text-blue-700 font-bold'; }
-                                else if (status === 'I') { content = 'I'; cellClass += ' bg-yellow-100 text-yellow-700 font-bold'; }
-                                else if (status === 'A') { content = 'A'; cellClass += ' bg-red-100 text-red-700 font-bold'; }
-                                else if (status === 'DL') { content = 'DL'; cellClass += ' bg-purple-100 text-purple-700 font-bold'; }
-                                else if (status === 'C') { content = 'C'; cellClass += ' bg-gray-200 text-gray-700 font-bold'; }
-                                else if (hasEvent) { 
-                                    content = 'AG'; 
-                                    cellClass += ' bg-amber-100 text-amber-700 font-bold'; 
-                                    tooltip = hasEvent;
-                                }
-                                else if (isFriday) { 
-                                    content = ''; 
-                                    cellClass += ' bg-red-50'; 
-                                }
-                                
-                                gridHtml += `<td class="${cellClass}" ${tooltip ? `title="${tooltip}"` : ''}>${content}</td>`;
+                                let status = dataG.detail[d]; let isFriday = new Date(y, m - 1, d).getDay() === 5; let hasEvent = res.agendaBulanIni && res.agendaBulanIni[d];
+                                let cellClass = 'border border-gray-200 print:border-gray-300'; let content = '';
+                                if (status === 'v') { content = 'v'; cellClass += ' bg-green-100 text-green-700 font-bold'; } else if (status === 'S') { content = 'S'; cellClass += ' bg-blue-100 text-blue-700 font-bold'; } else if (status === 'I') { content = 'I'; cellClass += ' bg-yellow-100 text-yellow-700 font-bold'; } else if (status === 'A') { content = 'A'; cellClass += ' bg-red-100 text-red-700 font-bold'; } else if (status === 'DL') { content = 'DL'; cellClass += ' bg-purple-100 text-purple-700 font-bold'; } else if (status === 'C') { content = 'C'; cellClass += ' bg-gray-200 text-gray-700 font-bold'; } else if (hasEvent) { content = 'AG'; cellClass += ' bg-amber-100 text-amber-700 font-bold'; } else if (isFriday) { cellClass += ' bg-red-50'; }
+                                gridHtml += `<td class="${cellClass}">${content}</td>`;
                             }
-                            
-                            let totalIzinStr = dataG.I + dataG.DL + dataG.C;
-                            
-                            gridHtml += `
-                                <td class="border border-gray-200 print:border-gray-300 py-1.5 px-1 bg-green-50 font-bold text-green-700">${dataG.H}</td>
-                                <td class="border border-gray-200 print:border-gray-300 py-1.5 px-1 bg-yellow-50 font-bold text-yellow-700">${totalIzinStr}</td>
-                                <td class="border border-gray-200 print:border-gray-300 py-1.5 px-1 bg-blue-50 font-bold text-blue-700">${dataG.S}</td>
-                                <td class="border border-gray-200 print:border-gray-300 py-1.5 px-1 bg-red-50 font-bold text-red-700">${dataG.A}</td>
-                            </tr>`;
+                            gridHtml += `<td class="border border-gray-200 py-1.5 px-1 bg-green-50 font-bold text-green-700">${dataG.H}</td><td class="border border-gray-200 py-1.5 px-1 bg-yellow-50 font-bold text-yellow-700">${dataG.I + dataG.DL + dataG.C}</td><td class="border border-gray-200 py-1.5 px-1 bg-blue-50 font-bold text-blue-700">${dataG.S}</td><td class="border border-gray-200 py-1.5 px-1 bg-red-50 font-bold text-red-700">${dataG.A}</td></tr>`;
                         });
-
-                        gridHtml += `</tbody></table></div></div>`;
+                        gridHtml += `</tbody></table></div></div><div class="mt-4 space-y-3 print:hidden"><button onclick="cetakPDFBulananGrid()" class="w-full bg-red-600 text-white font-semibold py-3 rounded-xl shadow-md"><i class="fas fa-file-pdf mr-2"></i> Cetak PDF (Landscape)</button><button onclick="cetakRekap()" class="w-full bg-green-600 text-white font-semibold py-3 rounded-xl shadow-md"><i class="fas fa-file-excel mr-2"></i> Simpan ke Google Sheets</button></div>`;
                     }
-                    
-                    gridHtml += `
-                    <div class="mt-4 space-y-3 print:hidden">
-                        <button type="button" onclick="cetakPDFBulananGrid()" class="w-full bg-red-600 text-white font-semibold py-3 rounded-xl shadow-md hover:bg-red-700 transition cursor-pointer flex justify-center items-center">
-                            <i class="fas fa-file-pdf mr-2"></i> Cetak PDF Kehadiran Guru (Landscape)
-                        </button>
-                        <button type="button" onclick="cetakRekap()" class="w-full bg-green-600 text-white font-semibold py-3 rounded-xl shadow-md hover:bg-green-700 transition cursor-pointer flex justify-center items-center">
-                            <i class="fas fa-file-excel mr-2"></i> Simpan ke Google Sheets
-                        </button>
-                    </div>`;
 
-
-                    // --- MEMBUAT HTML UNTUK TAB SUMMARY (Kanan) ---
-                    let summaryHtml = `
-                    <div id="print-header-summary" class="hidden print:block w-full mb-4" style="break-after: avoid; page-break-after: avoid;">
-                        <div class="flex items-center mb-4">
-                            <div class="mr-4"><img src="https://i.ibb.co.com/PvyzRgq9/Logo-SMP-Unggulan-Abu-Zairi.png" alt="Logo SMP" class="w-16 h-16 object-contain"></div>
-                            <div class="flex-1">
-                                <h2 class="text-xl font-bold text-gray-900 leading-tight">Rekapitulasi Kehadiran Bulanan Guru<br>SMP Unggulan Abu Zairi</h2>
-                                <p class="text-gray-800 font-semibold mt-1">Periode: ${bulanFormat}</p>
-                                <p class="text-gray-600 text-xs font-medium uppercase tracking-wider mt-1">Laporan Rekapitulasi Sesi & Jam Mengajar</p>
-                            </div>
-                        </div>
-                        <div class="w-full border-b-2 border-gray-900"></div>
-                    </div>`;
-
-                    summaryHtml += `<div class="bg-indigo-50 p-4 rounded-xl shadow-sm mb-4 print:bg-white print:p-0 print:shadow-none print:border-none print:mb-0" style="break-before: avoid; page-break-before: avoid;">
-                        <div class="flex justify-between items-center mb-3 border-b border-indigo-200 pb-2 print:hidden">
-                            <h3 class="font-bold text-sm text-indigo-800"><i class="fas fa-clipboard-list mr-2"></i>Rekap Sesi & Jam</h3>
-                            <button type="button" onclick="copyTableToClipboard('tabel-gaji')" class="text-[10px] bg-white border border-indigo-200 text-indigo-600 hover:bg-indigo-600 hover:text-white px-2 py-1 rounded shadow-sm transition print:hidden"><i class="fas fa-copy mr-1"></i>Salin Excel</button>
-                        </div>
-                        <div class="overflow-x-auto rounded-lg border border-indigo-100 shadow-sm custom-scrollbar print:shadow-none print:border-none print:overflow-visible">
-                            <table id="tabel-gaji" class="min-w-full bg-white text-left text-xs text-gray-700 border-collapse print:border print:border-gray-300">
-                                <thead class="bg-indigo-100 text-indigo-800 print:bg-gray-100 print:text-gray-800">
-                                    <tr>
-                                        <th class="py-2 px-3 font-semibold border border-indigo-200 print:border-gray-300 w-8 text-center">No</th>
-                                        <th class="py-2 px-3 font-semibold border border-indigo-200 print:border-gray-300 whitespace-nowrap">Nama Guru</th>
-                                        <th class="py-2 px-3 font-semibold border border-indigo-200 print:border-gray-300 text-center" title="Total Hari Hadir">Hari</th>
-                                        <th class="py-2 px-3 font-semibold border border-indigo-200 print:border-gray-300 text-center" title="Total Sesi Mengajar">Sesi</th>
-                                        <th class="py-2 px-3 font-semibold border border-indigo-200 print:border-gray-300 text-center" title="Total Jam Pelajaran">Jam</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-gray-100">`;
+                    // HTML Summary
+                    let summaryHtml = `<div id="print-header-summary" class="hidden print:block w-full mb-4"><div class="flex items-center mb-4"><div class="mr-4"><img src="https://i.ibb.co.com/PvyzRgq9/Logo-SMP-Unggulan-Abu-Zairi.png" class="w-16 h-16"></div><div class="flex-1"><h2 class="text-xl font-bold text-gray-900">Rekapitulasi Kehadiran Bulanan Guru</h2><p class="text-gray-800 font-semibold">Periode: ${bulanFormat}</p></div></div><div class="w-full border-b-2 border-gray-900"></div></div>`;
+                    summaryHtml += `<div class="bg-indigo-50 p-4 rounded-xl shadow-sm mb-4 print:bg-white print:p-0 print:border-none print:shadow-none"><div class="flex justify-between items-center mb-3 border-b border-indigo-200 pb-2 print:hidden"><h3 class="font-bold text-sm text-indigo-800">Rekap Sesi & Jam</h3><button onclick="copyTableToClipboard('tabel-gaji')" class="text-[10px] bg-white text-indigo-600 px-2 py-1 rounded border border-indigo-200">Salin Excel</button></div><div class="overflow-x-auto rounded-lg border border-indigo-100 shadow-sm print:border-none print:shadow-none"><table id="tabel-gaji" class="min-w-full bg-white text-left text-xs text-gray-700 print:border print:border-gray-300"><thead class="bg-indigo-100 text-indigo-800 print:bg-gray-100 print:text-gray-800"><tr><th class="py-2 px-3 border border-indigo-200 print:border-gray-300 w-8 text-center">No</th><th class="py-2 px-3 border border-indigo-200 print:border-gray-300">Nama Guru</th><th class="py-2 px-3 border border-indigo-200 print:border-gray-300 text-center">Hari</th><th class="py-2 px-3 border border-indigo-200 print:border-gray-300 text-center">Sesi</th><th class="py-2 px-3 border border-indigo-200 print:border-gray-300 text-center">Jam</th></tr></thead><tbody>`;
                                 
-                    (res.rekapGuru || []).forEach((g, i) => {
-                        summaryHtml += `<tr class="hover:bg-indigo-50 transition">
-                                    <td class="py-2 px-3 border border-indigo-100 print:border-gray-300 text-center text-gray-500">${i + 1}</td>
-                                    <td class="py-2 px-3 border border-indigo-100 print:border-gray-300 font-medium whitespace-nowrap">${g.namaGuru}</td>
-                                    <td class="py-2 px-3 border border-indigo-100 print:border-gray-300 text-center font-bold text-indigo-600">${g.totalHadir}</td>
-                                    <td class="py-2 px-3 border border-indigo-100 print:border-gray-300 text-center font-bold text-blue-600">${g.totalJurnal}</td>
-                                    <td class="py-2 px-3 border border-indigo-100 print:border-gray-300 text-center font-bold text-purple-600">${g.totalJam || 0}</td>
-                                 </tr>`;
-                    });
-                    
-                    summaryHtml += `   </tbody>
-                            </table>
-                        </div>
-                        <p class="text-[9px] text-gray-500 mt-2 text-center print:hidden"><i class="fas fa-info-circle mr-1"></i> Sesi = Jumlah Jurnal. Jam = Total Jam Pelajaran.</p>
-                    </div>`;
+                    (res.rekapGuru || []).forEach((g, i) => summaryHtml += `<tr><td class="py-2 px-3 border border-indigo-100 print:border-gray-300 text-center">${i + 1}</td><td class="py-2 px-3 border border-indigo-100 print:border-gray-300 font-medium">${g.namaGuru}</td><td class="py-2 px-3 border border-indigo-100 print:border-gray-300 text-center font-bold text-indigo-600">${g.totalHadir}</td><td class="py-2 px-3 border border-indigo-100 print:border-gray-300 text-center font-bold text-blue-600">${g.totalJurnal}</td><td class="py-2 px-3 border border-indigo-100 print:border-gray-300 text-center font-bold text-purple-600">${g.totalJam || 0}</td></tr>`);
+                    summaryHtml += `</tbody></table></div></div>`;
                     
                     let absenMap = {};
-                    if (res.siswaAbsen && res.siswaAbsen.length > 0) {
-                        res.siswaAbsen.forEach(s => {
-                            if(!absenMap[s.nama]) absenMap[s.nama] = { kelas: s.kelas, totalSakit: 0, totalIzin: 0, totalAlpa: 0, records: [] };
-                            if(s.keterangan === 'Sakit') absenMap[s.nama].totalSakit++;
-                            else if(s.keterangan === 'Izin') absenMap[s.nama].totalIzin++;
-                            else if(s.keterangan === 'Alpa') absenMap[s.nama].totalAlpa++;
-                        });
-                    }
+                    if (res.siswaAbsen && res.siswaAbsen.length > 0) res.siswaAbsen.forEach(s => { if(!absenMap[s.nama]) absenMap[s.nama] = { kelas: s.kelas, totalSakit: 0, totalIzin: 0, totalAlpa: 0 }; if(s.keterangan === 'Sakit') absenMap[s.nama].totalSakit++; else if(s.keterangan === 'Izin') absenMap[s.nama].totalIzin++; else if(s.keterangan === 'Alpa') absenMap[s.nama].totalAlpa++; });
                     
-                    let totalSiswaAbsenUnik = Object.keys(absenMap).length;
-                    summaryHtml += `<div class="bg-white border border-gray-200 p-4 rounded-xl shadow-sm print:hidden"><div class="flex justify-between items-center mb-3 border-b pb-1"><h3 class="font-bold text-sm text-gray-800">Siswa Tidak Hadir Bulan Ini</h3><span class="text-[10px] font-bold bg-red-100 text-red-600 px-2 py-0.5 rounded-full">Total: ${totalSiswaAbsenUnik} Anak</span></div><ul class="space-y-3">`;
-                    if (totalSiswaAbsenUnik > 0) {
-                        for (let namaSiswa in absenMap) {
-                            let dataSiswa = absenMap[namaSiswa];
-                            let totalAbsenSiswa = dataSiswa.totalSakit + dataSiswa.totalIzin + dataSiswa.totalAlpa;
-                            let badgeHtml = '';
-                            if(dataSiswa.totalSakit > 0) badgeHtml += `<span class="bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded mr-1">Sakit: ${dataSiswa.totalSakit}</span>`;
-                            if(dataSiswa.totalIzin > 0) badgeHtml += `<span class="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded mr-1">Izin: ${dataSiswa.totalIzin}</span>`;
-                            if(dataSiswa.totalAlpa > 0) badgeHtml += `<span class="bg-red-100 text-red-700 px-1.5 py-0.5 rounded">Alpa: ${dataSiswa.totalAlpa}</span>`;
-                            summaryHtml += `<li class="flex flex-col text-xs border-b border-gray-50 pb-2 last:border-0"><div class="flex justify-between items-center mb-1"><span class="font-semibold text-gray-700">${namaSiswa} <span class="font-normal text-[10px] text-gray-400">(${dataSiswa.kelas})</span></span><span class="text-[10px] font-bold text-red-500">${totalAbsenSiswa}x Absen</span></div><div class="text-[9px] font-bold flex mt-1">${badgeHtml}</div></li>`;
+                    summaryHtml += `<div class="bg-white border border-gray-200 p-4 rounded-xl shadow-sm print:hidden"><div class="flex justify-between items-center mb-3 border-b pb-1"><h3 class="font-bold text-sm text-gray-800">Siswa Tidak Hadir Bulan Ini</h3><span class="text-[10px] font-bold bg-red-100 text-red-600 px-2 py-0.5 rounded-full">Total: ${Object.keys(absenMap).length} Anak</span></div><ul class="space-y-3">`;
+                    if (Object.keys(absenMap).length > 0) {
+                        for (let n in absenMap) {
+                            let d = absenMap[n]; let html = '';
+                            if(d.totalSakit > 0) html += `<span class="bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded mr-1">Sakit: ${d.totalSakit}</span>`;
+                            if(d.totalIzin > 0) html += `<span class="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded mr-1">Izin: ${d.totalIzin}</span>`;
+                            if(d.totalAlpa > 0) html += `<span class="bg-red-100 text-red-700 px-1.5 py-0.5 rounded">Alpa: ${d.totalAlpa}</span>`;
+                            summaryHtml += `<li class="flex flex-col text-xs border-b border-gray-50 pb-2 last:border-0"><div class="flex justify-between items-center mb-1"><span class="font-semibold text-gray-700">${n} <span class="font-normal text-[10px] text-gray-400">(${d.kelas})</span></span><span class="text-[10px] font-bold text-red-500">${d.totalSakit + d.totalIzin + d.totalAlpa}x Absen</span></div><div class="text-[9px] font-bold flex mt-1">${html}</div></li>`;
                         }
-                    } else { summaryHtml += '<li class="text-center text-green-500 text-xs py-2"><i class="fas fa-check-circle mr-1"></i> Semua siswa hadir penuh bulan ini.</li>'; }
-                    summaryHtml += `</ul></div>`;
+                    } else summaryHtml += '<li class="text-center text-green-500 text-xs py-2"><i class="fas fa-check-circle mr-1"></i> Semua siswa hadir penuh.</li>';
+                    summaryHtml += `</ul></div><div class="mt-4 space-y-3 print:hidden"><button onclick="cetakPDFBulananSummary()" class="w-full bg-orange-600 text-white font-semibold py-3 rounded-xl shadow-md"><i class="fas fa-file-pdf mr-2"></i> Cetak PDF (Portrait)</button><button onclick="cetakRekap()" class="w-full bg-green-600 text-white font-semibold py-3 rounded-xl shadow-md"><i class="fas fa-file-excel mr-2"></i> Simpan ke Google Sheets</button></div>`;
 
-                    summaryHtml += `
-                    <div class="mt-4 space-y-3 print:hidden">
-                        <button type="button" onclick="cetakPDFBulananSummary()" class="w-full bg-orange-600 text-white font-semibold py-3 rounded-xl shadow-md hover:bg-orange-700 transition cursor-pointer flex justify-center items-center">
-                            <i class="fas fa-file-pdf mr-2"></i> Cetak PDF Sesi & Jam Guru (Portrait)
-                        </button>
-                        <button type="button" onclick="cetakRekap()" class="w-full bg-green-600 text-white font-semibold py-3 rounded-xl shadow-md hover:bg-green-700 transition cursor-pointer flex justify-center items-center">
-                            <i class="fas fa-file-excel mr-2"></i> Simpan ke Google Sheets
-                        </button>
-                    </div>`;
-
-                    // Masukkan ke DOM masing-masing tab
-                    document.getElementById('monthly-content-grid').innerHTML = gridHtml;
-                    document.getElementById('monthly-content-summary').innerHTML = summaryHtml;
-                    
-                    // Aktifkan default tab pertama (Grid)
-                    switchMonthlyTab('grid');
-
+                    document.getElementById('monthly-content-grid').innerHTML = gridHtml; document.getElementById('monthly-content-summary').innerHTML = summaryHtml; switchMonthlyTab('grid');
                 } else showToast("Gagal memuat rekap.");
             }).catch(() => { hideLoader(); showToast("Koneksi gagal."); });
         }
 
-        // =======================================================
-        // FUNGSI PRINT PDF GRID (LANDSCAPE)
-        // =======================================================
         function cetakPDFBulananGrid() {
-            let style = document.getElementById('print-style-dynamic');
-            if (!style) {
-                style = document.createElement('style');
-                style.id = 'print-style-dynamic';
-                document.head.appendChild(style);
-            }
-            style.innerHTML = '@media print { @page { size: A4 landscape; margin: 10mm; } }';
-            
-            setTimeout(() => {
-                window.print();
-            }, 50);
+            let style = document.getElementById('print-style-dynamic') || document.createElement('style'); style.id = 'print-style-dynamic'; document.head.appendChild(style);
+            style.innerHTML = '@media print { @page { size: A4 landscape; margin: 10mm; } }'; setTimeout(() => window.print(), 50);
         }
 
-        // =======================================================
-        // FUNGSI PRINT PDF SUMMARY (PORTRAIT)
-        // =======================================================
         function cetakPDFBulananSummary() {
-            let style = document.getElementById('print-style-dynamic');
-            if (!style) {
-                style = document.createElement('style');
-                style.id = 'print-style-dynamic';
-                document.head.appendChild(style);
-            }
-            style.innerHTML = '@media print { @page { size: A4 portrait; margin: 15mm; } }';
-            
-            setTimeout(() => {
-                window.print();
-            }, 50);
+            let style = document.getElementById('print-style-dynamic') || document.createElement('style'); style.id = 'print-style-dynamic'; document.head.appendChild(style);
+            style.innerHTML = '@media print { @page { size: A4 portrait; margin: 15mm; } }'; setTimeout(() => window.print(), 50);
         }
 
-        // =======================================================
-        // FUNGSI PRINT TAHUNAN
-        // =======================================================
         function cetakPDFTahunan() {
-            document.body.classList.add('printing-yearly');
-            
-            let style = document.getElementById('print-style-dynamic');
-            if (!style) {
-                style = document.createElement('style');
-                style.id = 'print-style-dynamic';
-                document.head.appendChild(style);
-            }
-            style.innerHTML = '@media print { @page { size: A4 portrait; margin: 15mm; } }';
-            
-            setTimeout(() => {
-                window.print();
-                document.body.classList.remove('printing-yearly');
-            }, 50);
+            let style = document.getElementById('print-style-dynamic') || document.createElement('style'); style.id = 'print-style-dynamic'; document.head.appendChild(style);
+            style.innerHTML = '@media print { @page { size: A4 portrait; margin: 15mm; } }'; setTimeout(() => window.print(), 50);
         }
 
         function loadYearlyRecap() {
-            const tahun = document.getElementById('filter-year').value;
-            showLoader("Menganalisis data...");
+            const tahun = document.getElementById('filter-year').value; showLoader("Menganalisis data...");
             callAPI('getYearlyRecap', tahun).then(res => {
                 hideLoader();
                 if (res && res.success && res.data) {
                     const data = res.data; 
-                    let html = `<div class="print-page-1"><div class="hidden print:flex print:items-center print:mb-4"><div class="mr-4"><img src="https://i.ibb.co.com/PvyzRgq9/Logo-SMP-Unggulan-Abu-Zairi.png" alt="Logo SMP" class="w-16 h-16 object-contain"></div><div class="flex-1"><h2 class="text-xl font-bold text-gray-900 leading-tight">Laporan Jurnal Tahunan Guru<br>SMP Unggulan Abu Zairi</h2><p class="text-gray-800 font-semibold mt-1">Tahun ${tahun}</p></div></div><div class="hidden print:block w-full border-b-2 border-gray-900 mb-4"></div>`;
-
+                    let html = `<div class="print-page-1"><div class="hidden print:flex print:items-center print:mb-4"><div class="mr-4"><img src="https://i.ibb.co.com/PvyzRgq9/Logo-SMP-Unggulan-Abu-Zairi.png" class="w-16 h-16"></div><div class="flex-1"><h2 class="text-xl font-bold text-gray-900">Laporan Jurnal Tahunan Guru</h2><p class="text-gray-800 font-semibold">Tahun ${tahun}</p></div></div><div class="hidden print:block w-full border-b-2 border-gray-900 mb-4"></div>`;
                     html += `<div class="grid grid-cols-2 gap-4 mb-6 print:mb-4"><div class="bg-indigo-50 border border-indigo-100 rounded-xl p-4 text-center shadow-sm"><div class="text-2xl font-bold text-indigo-700">${data.summary.totalHadirGuru || 0}</div><div class="text-[10px] font-semibold text-indigo-500 uppercase mt-1">Total Hadir Guru</div></div><div class="bg-green-50 border border-green-100 rounded-xl p-4 text-center shadow-sm"><div class="text-2xl font-bold text-green-600">${data.summary.totalJamEfektif || 0}</div><div class="text-[10px] font-semibold text-green-500 uppercase mt-1">Total Jam Efektif</div></div></div>`;
-                    
-                    html += `<h3 class="font-bold text-gray-700 text-sm mb-3 print:mb-2 border-b pb-1">Top 3 Guru Paling Rajin Tahun ${tahun}</h3><div class="space-y-3 mb-6 print:mb-4 print:max-h-[20vh] print:overflow-hidden">`;
+                    html += `<h3 class="font-bold text-gray-700 text-sm mb-3 print:mb-2 border-b pb-1">Top 3 Guru Paling Rajin Tahun ${tahun}</h3><div class="space-y-3 mb-6 print:mb-4">`;
                     if(data.rankingGuru && data.rankingGuru.length) {
                         const maxTotal = data.rankingGuru[0].totalHadir; 
-                        // FITUR FILTER 3 TERATAS (.slice(0, 3))
                         data.rankingGuru.slice(0, 3).forEach((item, index) => {
-                            const rankColor = index === 0 ? 'text-yellow-500' : (index === 1 ? 'text-gray-400' : (index === 2 ? 'text-amber-600' : 'text-indigo-400'));
-                            const rankIcon = index < 3 ? 'fa-medal' : 'fa-user-tie';
                             const percentage = (item.totalHadir / maxTotal) * 100;
-                            html += `<div class="flex items-center p-2 bg-white rounded-lg border border-gray-100 shadow-sm print:shadow-none print:border-gray-200"><div class="w-8 flex justify-center ${rankColor} text-lg"><i class="fas ${rankIcon}"></i></div><div class="flex-1 ml-2"><div class="flex justify-between text-xs mb-1"><span class="font-semibold text-gray-700">${item.namaGuru}</span><span class="font-bold text-indigo-600">${item.totalHadir} Hari</span></div><div class="w-full bg-gray-100 rounded-full h-1.5"><div class="bg-indigo-500 h-1.5 rounded-full" style="width: ${percentage}%"></div></div></div></div>`;
+                            html += `<div class="flex items-center p-2 bg-white rounded-lg border border-gray-100 shadow-sm print:border-gray-300 print:shadow-none"><div class="w-8 flex justify-center text-lg ${index === 0 ? 'text-yellow-500' : (index === 1 ? 'text-gray-400' : 'text-amber-600')}"><i class="fas fa-medal"></i></div><div class="flex-1 ml-2"><div class="flex justify-between text-xs mb-1"><span class="font-semibold text-gray-700">${item.namaGuru}</span><span class="font-bold text-indigo-600">${item.totalHadir} Hari</span></div><div class="w-full bg-gray-100 rounded-full h-1.5"><div class="bg-indigo-500 h-1.5 rounded-full" style="width: ${percentage}%"></div></div></div></div>`;
                         });
                     }
-                    html += `</div>`;
-
-                    html += `<div class="w-full"><h3 class="font-bold text-gray-700 text-sm mb-3 print:mb-2 border-b pb-1">Grafik Kehadiran Guru (Tahun ke Tahun)</h3><div class="bg-white p-4 print:p-2 rounded-xl shadow-sm mb-6 print:mb-4 border border-gray-100 relative print:h-[18vh]"><canvas id="yearlyChart"></canvas></div></div>`;
-                    html += `<div class="w-full"><h3 class="font-bold text-gray-700 text-sm mb-3 print:mb-2 border-b pb-1">Grafik Total Kehadiran per Guru</h3><div class="bg-white p-4 print:p-2 rounded-xl shadow-sm mb-6 print:mb-0 border border-gray-100 relative print:h-[18vh] print:min-h-0" style="min-height: 250px;"><canvas id="guruChart"></canvas></div></div></div>`;
-                             
+                    html += `</div><div class="w-full"><h3 class="font-bold text-gray-700 text-sm mb-3 print:mb-2 border-b pb-1">Grafik Kehadiran Guru (Tahun ke Tahun)</h3><div class="bg-white p-4 print:p-2 rounded-xl shadow-sm mb-6 print:mb-4 border border-gray-100"><canvas id="yearlyChart"></canvas></div></div><div class="w-full"><h3 class="font-bold text-gray-700 text-sm mb-3 print:mb-2 border-b pb-1">Grafik Total Kehadiran per Guru</h3><div class="bg-white p-4 print:p-2 rounded-xl shadow-sm mb-6 print:mb-0 border border-gray-100" style="min-height: 250px;"><canvas id="guruChart"></canvas></div></div></div>`;
                     html += `<h3 class="font-bold text-gray-700 text-sm mb-3 border-b pb-1">Rekap Kehadiran Guru Per Bulan</h3><div class="bg-white p-4 print:p-0 rounded-xl shadow-sm mb-6 print:mb-0 print:border-none print:shadow-none border border-gray-100"><div class="mb-4 print:hidden"><label class="block text-xs font-medium text-gray-500 mb-1">Pilih Guru</label><select id="search-guru-yearly" class="w-full p-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-indigo-500 bg-gray-50"><option value="">-- Silakan Pilih Guru --</option>`;
-                    if (data.guruMonthlyStats) Object.keys(data.guruMonthlyStats).forEach(guru => { html += `<option value="${guru}">${guru}</option>`; });
-                    html += `</select></div><div id="single-guru-container"><div id="print-guru-label" class="hidden text-sm font-bold text-gray-800 mb-2 pb-1 border-b"></div><div id="monthly-stats-container" class="grid grid-cols-4 gap-2 hidden"></div><div id="monthly-stats-placeholder" class="text-center text-xs text-gray-400 py-6 print:hidden"><i class="fas fa-search text-2xl mb-2 text-gray-300"></i><br>Pilih guru dari daftar di atas untuk melihat<br>rekap kehadiran per bulannya.</div></div><div id="print-all-gurus-container" class="hidden">`;
+                    if (data.guruMonthlyStats) Object.keys(data.guruMonthlyStats).forEach(guru => html += `<option value="${guru}">${guru}</option>`);
+                    html += `</select></div><div id="single-guru-container"><div id="print-guru-label" class="hidden text-sm font-bold text-gray-800 mb-2 pb-1 border-b"></div><div id="monthly-stats-container" class="grid grid-cols-4 gap-2 hidden"></div><div id="monthly-stats-placeholder" class="text-center text-xs text-gray-400 py-6 print:hidden"><i class="fas fa-search text-2xl mb-2 text-gray-300"></i><br>Pilih guru dari daftar di atas.</div></div><div id="print-all-gurus-container" class="hidden">`;
                     
                     if (data.guruMonthlyStats) {
-                        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agt', 'Sep', 'Okt', 'Nov', 'Des'];
-                        let guruCounter = 0; 
+                        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agt', 'Sep', 'Okt', 'Nov', 'Des']; let guruCounter = 0; 
                         Object.keys(data.guruMonthlyStats).forEach(guru => {
-                            guruCounter++; const stats = data.guruMonthlyStats[guru];
-                            const totalHadir = stats.reduce((sum, current) => sum + current, 0); 
+                            guruCounter++; const stats = data.guruMonthlyStats[guru]; const totalHadir = stats.reduce((sum, current) => sum + current, 0); 
                             html += `<div class="guru-print-block mb-6 print:mb-8"><div class="text-sm font-bold text-gray-800 mb-2 pb-1 border-b">Rincian Kehadiran: ${guru}</div><div class="grid grid-cols-4 gap-2">`;
-                            stats.forEach((val, idx) => {
-                                const textColor = val > 0 ? 'text-indigo-600' : 'text-red-400';
-                                const bgColor = val > 0 ? 'bg-white' : 'bg-gray-50';
-                                html += `<div class="${bgColor} border border-gray-200 rounded p-2 text-center shadow-sm"><div class="text-[10px] font-semibold text-gray-500 uppercase border-b pb-1 mb-1">${months[idx]}</div><div class="text-sm font-bold ${textColor}">${val} <span class="text-[9px] font-normal text-gray-400">hr</span></div></div>`;
-                            });
+                            stats.forEach((val, idx) => html += `<div class="${val > 0 ? 'bg-white' : 'bg-gray-50'} border border-gray-200 rounded p-2 text-center shadow-sm"><div class="text-[10px] font-semibold text-gray-500 uppercase border-b pb-1 mb-1">${months[idx]}</div><div class="text-sm font-bold ${val > 0 ? 'text-indigo-600' : 'text-red-400'}">${val} <span class="text-[9px] font-normal text-gray-400">hr</span></div></div>`);
                             html += `<div class="col-span-4 bg-indigo-50 border border-indigo-200 rounded p-2 text-center shadow-sm mt-1"><span class="text-[11px] font-bold text-gray-600 uppercase mr-2">Total Kehadiran Tahun Ini:</span><span class="text-sm font-extrabold text-indigo-700">${totalHadir} Hari</span></div></div></div>`;
                             if (guruCounter % 3 === 0 && guruCounter < Object.keys(data.guruMonthlyStats).length) html += `<div class="hidden print:block page-break"></div>`;
                         });
                     }
-                    html += `</div></div>`;
-
-                    document.getElementById('yearly-result-container').innerHTML = html;
-                    document.getElementById('btn-print-yearly').classList.remove('hidden');
+                    html += `</div></div>`; document.getElementById('yearly-result-container').innerHTML = html; document.getElementById('btn-print-yearly').classList.remove('hidden');
 
                     if (data.graphData) {
-                        const ctx = document.getElementById('yearlyChart').getContext('2d');
-                        if (yearlyChartInstance) yearlyChartInstance.destroy();
-                        const colors = ['rgba(79, 70, 229, 0.7)', 'rgba(14, 165, 233, 0.7)', 'rgba(16, 185, 129, 0.7)', 'rgba(245, 158, 11, 0.7)', 'rgba(239, 68, 68, 0.7)', 'rgba(168, 85, 247, 0.7)'];
-                        const borderColors = ['#4f46e5', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#a855f7'];
-                        const yearBgColors = data.graphData.labels.map((_, i) => colors[i % colors.length]);
-                        const yearBorderColors = data.graphData.labels.map((_, i) => borderColors[i % borderColors.length]);
-                        
-                        yearlyChartInstance = new Chart(ctx, {
-                            type: 'bar',
-                            data: { labels: data.graphData.labels, datasets: [{ label: 'Total Kehadiran (Hari)', data: data.graphData.data, backgroundColor: yearBgColors, borderColor: yearBorderColors, borderWidth: 1, borderRadius: 4 }] },
-                            options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
-                        });
+                        const ctx = document.getElementById('yearlyChart').getContext('2d'); if (yearlyChartInstance) yearlyChartInstance.destroy();
+                        yearlyChartInstance = new Chart(ctx, { type: 'bar', data: { labels: data.graphData.labels, datasets: [{ label: 'Total Kehadiran (Hari)', data: data.graphData.data, backgroundColor: 'rgba(79, 70, 229, 0.7)', borderColor: '#4f46e5', borderWidth: 1, borderRadius: 4 }] }, options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } } });
                     }
-
                     if (data.rankingGuru && data.rankingGuru.length > 0) {
-                        const ctxGuru = document.getElementById('guruChart').getContext('2d');
-                        if (guruChartInstance) guruChartInstance.destroy();
-                        const guruLabels = data.rankingGuru.map(g => g.namaGuru);
-                        const guruData = data.rankingGuru.map(g => g.totalHadir);
-                        
-                        const bgColors = ['rgba(16, 185, 129, 0.7)', 'rgba(239, 68, 68, 0.7)', 'rgba(245, 158, 11, 0.7)', 'rgba(59, 130, 246, 0.7)', 'rgba(168, 85, 247, 0.7)', 'rgba(236, 72, 153, 0.7)', 'rgba(14, 165, 233, 0.7)'];
-                        const bdColors = ['#10b981', '#ef4444', '#f59e0b', '#3b82f6', '#a855f7', '#ec4899', '#0ea5e9'];
-                        
-                        guruChartInstance = new Chart(ctxGuru, {
-                            type: 'bar',
-                            data: { labels: guruLabels, datasets: [{ label: 'Total Hadir (Hari)', data: guruData, backgroundColor: guruLabels.map((_, i) => bgColors[i % bgColors.length]), borderColor: guruLabels.map((_, i) => bdColors[i % bdColors.length]), borderWidth: 1, borderRadius: 4 }] },
-                            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: true } }, scales: { y: { beginAtZero: true }, x: { grid: { display: false }, ticks: { display: false } } } },
-                            plugins: [{
-                                id: 'barLabelsOnPrint',
-                                afterDatasetsDraw(chart) {
-                                    if (!isAppPrinting && !window.matchMedia('print').matches) return;
-                                    const { ctx, data } = chart;
-                                    chart.getDatasetMeta(0).data.forEach((bar, index) => {
-                                        const label = data.labels[index]; const val = data.datasets[0].data[index]; const barHeight = bar.base - bar.y;
-                                        if (val > 0 && barHeight > 25) { 
-                                            ctx.save(); ctx.translate(bar.x, bar.base - 8); ctx.rotate(-Math.PI / 2); ctx.fillStyle = '#ffffff'; ctx.font = 'bold 11px Poppins, sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 3;
-                                            ctx.fillText(`${label} (${val})`, 0, 0, barHeight - 16); ctx.restore();
-                                        }
-                                    });
-                                }
-                            }]
-                        });
+                        const ctxGuru = document.getElementById('guruChart').getContext('2d'); if (guruChartInstance) guruChartInstance.destroy();
+                        const labels = data.rankingGuru.map(g => g.namaGuru); const dta = data.rankingGuru.map(g => g.totalHadir);
+                        guruChartInstance = new Chart(ctxGuru, { type: 'bar', data: { labels: labels, datasets: [{ label: 'Total Hadir (Hari)', data: dta, backgroundColor: 'rgba(16, 185, 129, 0.7)', borderColor: '#10b981', borderWidth: 1, borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true }, x: { ticks: { display: false } } } } });
                     }
 
-                    const searchGuruSelect = document.getElementById('search-guru-yearly');
-                    searchGuruSelect.addEventListener('change', function() {
-                        const selectedGuru = this.value;
-                        const statsContainer = document.getElementById('monthly-stats-container');
-                        const placeholder = document.getElementById('monthly-stats-placeholder');
-                        const printLabel = document.getElementById('print-guru-label');
-
-                        if (selectedGuru && data.guruMonthlyStats[selectedGuru]) {
-                            const stats = data.guruMonthlyStats[selectedGuru];
-                            const totalHadir = stats.reduce((sum, current) => sum + current, 0); 
-                            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agt', 'Sep', 'Okt', 'Nov', 'Des'];
-                            let statsHtml = '';
-                            
-                            stats.forEach((val, idx) => {
-                                const textColor = val > 0 ? 'text-indigo-600' : 'text-red-400';
-                                const bgColor = val > 0 ? 'bg-white' : 'bg-gray-50';
-                                statsHtml += `<div class="${bgColor} border border-gray-200 rounded p-2 text-center shadow-sm"><div class="text-[10px] font-semibold text-gray-500 uppercase border-b pb-1 mb-1">${months[idx]}</div><div class="text-sm font-bold ${textColor}">${val} <span class="text-[9px] font-normal text-gray-400">hr</span></div></div>`;
-                            });
-                            
-                            statsHtml += `<div class="col-span-4 bg-indigo-50 border border-indigo-200 rounded p-2 text-center shadow-sm mt-1"><span class="text-[11px] font-bold text-gray-600 uppercase mr-2">Total Kehadiran Tahun Ini:</span><span class="text-sm font-extrabold text-indigo-700">${totalHadir} Hari</span></div>`;
-                            
-                            statsContainer.innerHTML = statsHtml; statsContainer.classList.remove('hidden'); placeholder.classList.add('hidden'); printLabel.classList.remove('hidden'); printLabel.innerText = "Rincian Kehadiran: " + selectedGuru;
-                        } else {
-                            statsContainer.classList.add('hidden'); placeholder.classList.remove('hidden'); printLabel.classList.add('hidden'); printLabel.innerText = "";
-                        }
+                    document.getElementById('search-guru-yearly').addEventListener('change', function() {
+                        const sel = this.value; const c = document.getElementById('monthly-stats-container'); const p = document.getElementById('monthly-stats-placeholder'); const l = document.getElementById('print-guru-label');
+                        if (sel && data.guruMonthlyStats[sel]) {
+                            let html = ''; const stats = data.guruMonthlyStats[sel]; const t = stats.reduce((s, a) => s + a, 0); const m = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agt', 'Sep', 'Okt', 'Nov', 'Des'];
+                            stats.forEach((v, i) => html += `<div class="${v > 0 ? 'bg-white' : 'bg-gray-50'} border border-gray-200 rounded p-2 text-center shadow-sm"><div class="text-[10px] font-semibold text-gray-500 uppercase border-b pb-1 mb-1">${m[i]}</div><div class="text-sm font-bold ${v > 0 ? 'text-indigo-600' : 'text-red-400'}">${v} <span class="text-[9px] font-normal text-gray-400">hr</span></div></div>`);
+                            html += `<div class="col-span-4 bg-indigo-50 border border-indigo-200 rounded p-2 text-center shadow-sm mt-1"><span class="text-[11px] font-bold text-gray-600 uppercase mr-2">Total Kehadiran Tahun Ini:</span><span class="text-sm font-extrabold text-indigo-700">${t} Hari</span></div>`;
+                            c.innerHTML = html; c.classList.remove('hidden'); p.classList.add('hidden'); l.classList.remove('hidden'); l.innerText = "Rincian Kehadiran: " + sel;
+                        } else { c.classList.add('hidden'); p.classList.remove('hidden'); l.classList.add('hidden'); l.innerText = ""; }
                     });
-
                 } else showToast("Gagal memuat rekap.");
             }).catch(() => { hideLoader(); showToast("Koneksi terputus."); });
         }
 
         function cetakRekap() {
-            showLoader("Menyiapkan Spreadsheet...");
-            callAPI('generatePrintableRecap', document.getElementById('filter-month').value).then(res => {
-                hideLoader();
-                if(res && res.success) {
-                    showToast("Format siap!");
-                    setTimeout(() => showToast("Buka file Spreadsheet 'Database_Si_Juragan' di Google Drive Anda. Format cetak telah tersedia di tab 'Cetak_Rekap'."), 500);
-                } else showToast("Gagal mencetak.");
+            showLoader("Menyiapkan Spreadsheet..."); callAPI('generatePrintableRecap', document.getElementById('filter-month').value).then(res => {
+                hideLoader(); if(res && res.success) { showToast("Format siap!"); setTimeout(() => showToast("Buka file Spreadsheet 'Database_Si_Juragan'. Format tersedia di tab 'Cetak_Rekap'."), 500); } else showToast("Gagal mencetak.");
             }).catch(() => { hideLoader(); showToast("Gagal koneksi."); });
         }
 
         function copyTableToClipboard(tableId) {
-            const table = document.getElementById(tableId);
-            if (!table) return showToast("Tabel tidak ditemukan!");
-            
-            let text = "";
-            const rows = table.querySelectorAll('tr');
-            rows.forEach(row => {
-                const cols = row.querySelectorAll('th, td');
-                const rowData = [];
-                cols.forEach(col => rowData.push(col.innerText));
-                text += rowData.join('\t') + '\n';
-            });
-            
-            const textArea = document.createElement("textarea");
-            textArea.value = text;
-            document.body.appendChild(textArea);
-            textArea.select();
-            try {
-                document.execCommand('copy');
-                showToast("Data berhasil disalin!");
-            } catch (err) {
-                showToast("Gagal menyalin tabel.");
-            }
-            document.body.removeChild(textArea);
+            const table = document.getElementById(tableId); if (!table) return showToast("Tabel tidak ditemukan!");
+            let text = ""; table.querySelectorAll('tr').forEach(row => { const rowData = []; row.querySelectorAll('th, td').forEach(col => rowData.push(col.innerText)); text += rowData.join('\t') + '\n'; });
+            const textArea = document.createElement("textarea"); textArea.value = text; document.body.appendChild(textArea); textArea.select();
+            try { document.execCommand('copy'); showToast("Data berhasil disalin!"); } catch (err) { showToast("Gagal menyalin tabel."); } document.body.removeChild(textArea);
         }
 
-        function handleLogout() { 
-            currentUser = null; currentUserRole = null; currentUserNiy = null; filledJamsThisSession = []; 
-            document.getElementById('niy').value = '';
-            document.getElementById('nama-guru-preview').classList.add('hidden');
-            switchView('view-login'); loadPublicJadwal();
-        }
-
-        function toggleTheme() {
-            const html = document.documentElement; html.classList.toggle('dark');
-            const isDark = html.classList.contains('dark');
-            try { localStorage.theme = isDark ? 'dark' : 'light'; } catch(e) {}
-            
-            const activeView = document.querySelector('.app-view.active').id;
-            const wrapper = document.getElementById('app-wrapper');
-            if (activeView === 'view-login') wrapper.style.background = isDark ? 'linear-gradient(to bottom right, #4f46e5, #9333ea)' : 'linear-gradient(to bottom right, #6366f1, #9333ea)';
-            else wrapper.style.background = isDark ? '#111827' : '#f9fafb';
-        }
-
-        window.addEventListener('DOMContentLoaded', () => {
-            try { setTanggalHariIni(); } catch(e){}
-            loadPublicJadwal(); switchView('view-login'); 
-        });
+        function handleLogout() { currentUser = null; currentUserRole = null; currentUserNiy = null; filledJamsThisSession = []; document.getElementById('niy').value = ''; document.getElementById('nama-guru-preview').classList.add('hidden'); switchView('view-login'); loadPublicJadwal(); }
+        function toggleTheme() { document.documentElement.classList.toggle('dark'); const isDark = document.documentElement.classList.contains('dark'); try { localStorage.theme = isDark ? 'dark' : 'light'; } catch(e) {} const activeView = document.querySelector('.app-view.active').id; const wrapper = document.getElementById('app-wrapper'); if (activeView === 'view-login') wrapper.style.background = isDark ? 'linear-gradient(to bottom right, #4f46e5, #9333ea)' : 'linear-gradient(to bottom right, #6366f1, #9333ea)'; else wrapper.style.background = isDark ? '#111827' : '#f9fafb'; }
+        window.addEventListener('DOMContentLoaded', () => { try { setTanggalHariIni(); } catch(e){} loadPublicJadwal(); switchView('view-login'); });
     </script>
 </body>
 </html>
