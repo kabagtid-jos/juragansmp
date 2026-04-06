@@ -87,14 +87,14 @@
     <!-- INJEKSI PWA SCRIPT (Data URI - Safe) -->
     <script>
         const manifestData = {
-            "name": "Si Juragan - Jurnal Guru",
-            "short_name": "Si Juragan",
+            "name": "Juragan SMP",
+            "short_name": "Juragan SMP",
             "start_url": ".",
             "display": "standalone",
             "background_color": "#f3f4f6",
             "theme_color": "#4f46e5",
             "description": "Aplikasi Sistem Jurnal Guru Andalan",
-            "icons": [{"src": "https://i.ibb.co.com/PvyzRgq9/Logo-SMP-Unggulan-Abu-Zairi.png", "sizes": "192x192", "type": "image/png"}]
+            "icons": [{"src": "https://i.ibb.co.com/s9VGXZ3t/Chat-GPT-Image-Apr-6-2026-11-18-48-PM.png", "sizes": "192x192", "type": "image/png"}]
         };
         const manifestUrl = 'data:application/manifest+json;charset=utf-8,' + encodeURIComponent(JSON.stringify(manifestData));
         document.write(`<link rel="manifest" href="${manifestUrl}">`);
@@ -622,13 +622,33 @@
         // PENGATURAN API GOOGLE APPS SCRIPT (TERBARU)
         // =========================================================================
         const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzsVUhDlob4_NN2W3kY3Ev6mzOzvrQTavvxuB8vRgADuaRrdlITwBlNMRicaWCIpEHo7g/exec"
+        const CACHE_PREFIX = "sijuragan_";
 
-        function callAPI(action, payload = null) {
+        function callAPI(action, payload = null, useCache = false, cacheTime = 300000) {
+            const cacheKey = CACHE_PREFIX + action + (payload ? '_' + JSON.stringify(payload) : '');
+            
+            if (useCache) {
+                const cached = sessionStorage.getItem(cacheKey);
+                if (cached) {
+                    const parsed = JSON.parse(cached);
+                    // Gunakan cache jika waktu belum expired
+                    if (Date.now() - parsed.timestamp < cacheTime) {
+                        return Promise.resolve(parsed.data);
+                    }
+                }
+            }
+
             return fetch(GAS_API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                 body: JSON.stringify({ action: action, payload: payload })
-            }).then(response => response.json());
+            }).then(response => response.json()).then(res => {
+                // Simpan respons ke cache jika useCache bernilai true
+                if (useCache && res) {
+                    sessionStorage.setItem(cacheKey, JSON.stringify({ timestamp: Date.now(), data: res }));
+                }
+                return res;
+            });
         }
 
         let currentUser = null; let currentUserRole = null; let currentUserNiy = null; let filledJamsThisSession = [];
@@ -652,11 +672,19 @@
             setTimeout(() => { toast.classList.add('opacity-0'); setTimeout(() => toast.classList.add('hidden'), 300); }, 3000);
         }
 
+        let loaderTimeout;
         function showLoader(text = "Memproses...") {
             document.getElementById('loadingText').innerText = text;
-            document.getElementById('loadingOverlay').classList.remove('hidden');
+            // Delay 300ms agar layar loading tidak berkedip jika data ditarik dari cache (sangat cepat)
+            loaderTimeout = setTimeout(() => {
+                document.getElementById('loadingOverlay').classList.remove('hidden');
+            }, 300); 
         }
-        function hideLoader() { document.getElementById('loadingOverlay').classList.add('hidden'); }
+        
+        function hideLoader() { 
+            clearTimeout(loaderTimeout);
+            document.getElementById('loadingOverlay').classList.add('hidden'); 
+        }
 
         function switchView(viewId) {
             document.querySelectorAll('.app-view').forEach(v => v.classList.remove('active'));
@@ -711,7 +739,8 @@
             previewEl.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Mencari data...';
 
             niyTimeout = setTimeout(() => {
-                callAPI('getGuruNameByNIY', niyValue).then(res => {
+                // Gunakan cache untuk NIY (berlaku 24 jam)
+                callAPI('getGuruNameByNIY', niyValue, true, 86400000).then(res => {
                     if(res && res.success) {
                         previewEl.className = "mt-2 text-sm text-green-600 font-medium";
                         previewEl.innerHTML = '<i class="fas fa-check-circle mr-1"></i> Halo, ' + res.name;
@@ -767,13 +796,24 @@
                     switchView('view-dashboard'); 
                     showToast("Login berhasil!");
                     
-                    if (res.dashData && res.dashData.success) renderDashboardData(res.dashData);
-                    else loadDashboardData();
+                    if (res.dashData && res.dashData.success) {
+                        // Simpan dashboard awal ke cache agar next-load sangat cepat
+                        const dashCacheKey = CACHE_PREFIX + 'getDashboardData_' + JSON.stringify(currentUserRole === 'TU' ? 'ALL' : currentUser);
+                        sessionStorage.setItem(dashCacheKey, JSON.stringify({ timestamp: Date.now(), data: res.dashData }));
+                        renderDashboardData(res.dashData);
+                    } else loadDashboardData();
 
                     if (res.agendas && res.agendas.success) {
+                        sessionStorage.setItem(CACHE_PREFIX + 'getAgendas', JSON.stringify({ timestamp: Date.now(), data: res.agendas }));
                         globalAgendas = res.agendas.data || [];
                         if (res.agendas.todayAgendas && res.agendas.todayAgendas.length > 0) showAgendaModal(res.agendas.todayAgendas);
                     } else checkTodayAgenda();
+
+                    // BACKGROUND PREFETCHING: Memuat data form di background agar menu terbuka instan nantinya
+                    setTimeout(() => {
+                        callAPI('getFormOptions', { role: currentUserRole, namaGuru: currentUser }, true, 3600000);
+                        if (currentUserRole !== 'Guru') callAPI('getSemuaGuru', null, true, 3600000);
+                    }, 500);
 
                 } else { showToast(res ? res.message : "Gagal Login"); }
             }).catch(() => { hideLoader(); showToast("Terjadi kesalahan jaringan."); });
@@ -795,13 +835,23 @@
                 return;
             }
 
-            container.innerHTML = `<div class="text-center text-white text-opacity-70 text-xs py-4"><i class="fas fa-spinner fa-spin mr-2"></i>Memuat jadwal...</div>`;
+            // Tampilkan cache jika ada untuk layar awal yang instan
+            const cacheKey = CACHE_PREFIX + 'getPublicJadwalHariIni';
+            const cached = sessionStorage.getItem(cacheKey);
+            if (cached) {
+                const resData = JSON.parse(cached).data;
+                if(resData && resData.success && resData.data && resData.data.length > 0) {
+                    container.innerHTML = resData.data.map(j => `<div class="bg-white bg-opacity-10 backdrop-blur-md border border-white border-opacity-20 p-3 rounded-xl text-white shadow-sm mb-2"><div class="flex justify-between items-start mb-1"><span class="font-semibold text-sm truncate w-2/3">${j.guru}</span><span class="text-[10px] bg-white bg-opacity-20 px-2 py-0.5 rounded font-bold whitespace-nowrap">${j.jam}</span></div><div class="text-[11px] text-white text-opacity-80 flex justify-between"><span class="truncate pr-2">${j.mapel}</span><span class="whitespace-nowrap font-medium">${j.kelas}</span></div></div>`).join('');
+                }
+            } else {
+                container.innerHTML = `<div class="text-center text-white text-opacity-70 text-xs py-4"><i class="fas fa-spinner fa-spin mr-2"></i>Memuat jadwal...</div>`;
+            }
 
-            callAPI('getPublicJadwalHariIni').then(res => {
+            callAPI('getPublicJadwalHariIni', null, true, 300000).then(res => {
                 if(res && res.success && res.data && res.data.length > 0) {
                     container.innerHTML = res.data.map(j => `<div class="bg-white bg-opacity-10 backdrop-blur-md border border-white border-opacity-20 p-3 rounded-xl text-white shadow-sm mb-2"><div class="flex justify-between items-start mb-1"><span class="font-semibold text-sm truncate w-2/3">${j.guru}</span><span class="text-[10px] bg-white bg-opacity-20 px-2 py-0.5 rounded font-bold whitespace-nowrap">${j.jam}</span></div><div class="text-[11px] text-white text-opacity-80 flex justify-between"><span class="truncate pr-2">${j.mapel}</span><span class="whitespace-nowrap font-medium">${j.kelas}</span></div></div>`).join('');
                 } else container.innerHTML = `<div class="bg-white bg-opacity-10 p-4 rounded-xl text-white text-opacity-80 text-center text-xs">Tidak ada jadwal hari ini</div>`;
-            }).catch(() => container.innerHTML = `<div class="text-white text-xs text-center py-2">Koneksi terputus.</div>`);
+            }).catch(() => { if(!cached) container.innerHTML = `<div class="text-white text-xs text-center py-2">Koneksi terputus.</div>`; });
         }
 
         function renderDashboardData(res) {
@@ -851,12 +901,30 @@
         }
 
         function loadDashboardData() {
+            const payloadGuru = currentUserRole === 'TU' ? 'ALL' : currentUser;
+            const cacheKey = CACHE_PREFIX + 'getDashboardData_' + JSON.stringify(payloadGuru);
+            const cached = sessionStorage.getItem(cacheKey);
+            
             const jc = document.getElementById('jadwal-container');
             const bc = document.getElementById('belum-isi-container');
-            jc.innerHTML = '<div class="text-xs text-gray-500 text-center py-2">Memuat...</div>';
-            bc.innerHTML = '<li class="text-xs text-gray-500">Memuat...</li>';
-            const payloadGuru = currentUserRole === 'TU' ? 'ALL' : currentUser;
-            callAPI('getDashboardData', payloadGuru).then(res => { if(res && res.success) renderDashboardData(res); }).catch(() => jc.innerHTML = '<p class="text-xs text-red-500">Koneksi terputus</p>');
+
+            // Optimistic UI: Render data cache jika ada seketika
+            if (cached) {
+                renderDashboardData(JSON.parse(cached).data);
+            } else {
+                jc.innerHTML = '<div class="text-xs text-gray-500 text-center py-4"><i class="fas fa-spinner fa-spin mr-2"></i>Memuat...</div>';
+                bc.innerHTML = '<li class="text-xs text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i>Memuat...</li>';
+            }
+
+            // Silent Update: Selalu perbarui data di latar belakang
+            callAPI('getDashboardData', payloadGuru).then(res => { 
+                if(res && res.success) {
+                    sessionStorage.setItem(cacheKey, JSON.stringify({ timestamp: Date.now(), data: res }));
+                    renderDashboardData(res); 
+                } 
+            }).catch(() => { 
+                if(!cached) jc.innerHTML = '<p class="text-xs text-red-500 text-center">Koneksi terputus</p>'; 
+            });
         }
 
         function openInputJurnal() {
@@ -865,7 +933,8 @@
             document.getElementById('hidden-absen-otomatis').value = '';
             document.getElementById('status-absen-otomatis').innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Menunggu kelas dipilih...';
             
-            callAPI('getFormOptions', { role: currentUserRole, namaGuru: currentUser }).then(res => {
+            // Gunakan Cache untuk opsi form (Disimpan 1 Jam)
+            callAPI('getFormOptions', { role: currentUserRole, namaGuru: currentUser }, true, 3600000).then(res => {
                 hideLoader();
                 if(res && res.success) {
                     if (res.isTU) {
@@ -914,7 +983,8 @@
             statusText.innerHTML = '<i class="fas fa-spinner fa-spin mr-2 text-indigo-500"></i>Mengecek data absen pusat...';
             hiddenInput.value = '';
             
-            callAPI('getAbsenSiswaHariIni', kelas).then(res => {
+            // Cache pengecekan absen selama 5 menit
+            callAPI('getAbsenSiswaHariIni', kelas, true, 300000).then(res => {
                 if (res && res.success) {
                     if (res.data && res.data.length > 0) {
                         statusText.innerHTML = `<span class="text-red-600 font-semibold"><i class="fas fa-user-times mr-1"></i> Absen: ${res.data}</span>`;
@@ -961,7 +1031,8 @@
         function openInputIzin() {
             document.getElementById('izin-tanggal').valueAsDate = new Date();
             showLoader("Memuat form...");
-            callAPI('getSemuaGuru').then(res => {
+            // Gunakan cache untuk daftar semua guru (Disimpan 1 Jam)
+            callAPI('getSemuaGuru', null, true, 3600000).then(res => {
                 hideLoader();
                 if (res && res.success) {
                     document.getElementById('izin-guru').innerHTML = '<option value="">Pilih Guru...</option>' + (res.data || []).map(g => `<option value="${g}">${g}</option>`).join('');
@@ -1012,7 +1083,8 @@
             
             const jkKelas = document.getElementById('filter-jk-kelas');
             if (jkKelas.options.length <= 1) {
-                callAPI('getFormOptions', {role: 'Admin', namaGuru: ''}).then(res => {
+                // Tarik daftar kelas menggunakan cache form option (1 Jam)
+                callAPI('getFormOptions', {role: 'Admin', namaGuru: ''}, true, 3600000).then(res => {
                     if (res && res.success && res.kelas) {
                         jkKelas.innerHTML = '<option value="">Pilih Kelas</option>' + res.kelas.map(k => `<option value="${k}">${k}</option>`).join('');
                     }
@@ -1049,7 +1121,8 @@
 
         function openWaSettings() {
             showLoader("Memuat pengaturan...");
-            callAPI('getWaSettings').then(res => {
+            // Cache pengaturan WA selama 5 menit
+            callAPI('getWaSettings', null, true, 300000).then(res => {
                 hideLoader();
                 if (res && res.success) {
                     document.getElementById('wa-aktif').checked = (res.data.aktif === 'true');
@@ -1078,7 +1151,7 @@
 
         // --- Fungsi Kalender ---
         function checkTodayAgenda() {
-            callAPI('getAgendas').then(res => { if(res && res.success && res.todayAgendas && res.todayAgendas.length > 0) showAgendaModal(res.todayAgendas); }).catch(e => console.log(e));
+            callAPI('getAgendas', null, true, 300000).then(res => { if(res && res.success && res.todayAgendas && res.todayAgendas.length > 0) showAgendaModal(res.todayAgendas); }).catch(e => console.log(e));
         }
         function showAgendaModal(agendas) {
             const modal = document.getElementById('agendaModal'); const content = document.getElementById('agenda-modal-content'); const dateEl = document.getElementById('agenda-modal-date');
@@ -1104,7 +1177,9 @@
             const container = document.getElementById('agenda-list-container'); const grid = document.getElementById('calendar-grid');
             container.innerHTML = '<div class="text-center text-gray-400 py-4 text-xs"><i class="fas fa-spinner fa-spin mr-1"></i> Memuat daftar agenda...</div>';
             grid.innerHTML = '<div class="col-span-7 text-center text-gray-400 py-6 text-xs"><i class="fas fa-spinner fa-spin"></i></div>';
-            callAPI('getAgendas').then(res => {
+            
+            // Cache daftar agenda 5 menit
+            callAPI('getAgendas', null, true, 300000).then(res => {
                 if(res && res.success) { globalAgendas = res.data || []; renderCalendar(); renderAgendaList(); } 
                 else { container.innerHTML = '<div class="text-center text-red-400 py-4 text-xs">Gagal memuat agenda.</div>'; grid.innerHTML = '<div class="col-span-7 text-center text-red-400 py-4 text-xs">Gagal.</div>'; }
             }).catch(() => { container.innerHTML = '<div class="text-center text-red-400 py-4 text-xs">Koneksi terputus.</div>'; grid.innerHTML = '<div class="col-span-7 text-center text-red-400 py-4 text-xs">Koneksi terputus.</div>'; });
@@ -1164,7 +1239,9 @@
             const bulan = document.getElementById('filter-month').value;
             if (!bulan) return showToast("Pilih bulan");
             showLoader("Memuat rekap...");
-            callAPI('getMonthlyRecap', bulan).then(res => {
+            
+            // Cache data rekap bulan tersebut selama 5 menit
+            callAPI('getMonthlyRecap', bulan, true, 300000).then(res => {
                 hideLoader();
                 if (res && res.success) {
                     document.getElementById('monthly-empty-state').classList.add('hidden');
@@ -1251,7 +1328,9 @@
 
         function loadYearlyRecap() {
             const tahun = document.getElementById('filter-year').value; showLoader("Menganalisis data...");
-            callAPI('getYearlyRecap', tahun).then(res => {
+            
+            // Cache rekap tahunan selama 5 menit
+            callAPI('getYearlyRecap', tahun, true, 300000).then(res => {
                 hideLoader();
                 if (res && res.success && res.data) {
                     const data = res.data; 
