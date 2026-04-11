@@ -1381,15 +1381,21 @@
                             data: { labels: guruLabels, datasets: [{ label: 'Total Hadir (Hari)', data: guruData, backgroundColor: guruLabels.map((_, i) => bgColors[i % bgColors.length]), borderColor: guruLabels.map((_, i) => bdColors[i % bdColors.length]), borderWidth: 1, borderRadius: 4 }] }, 
                             options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: true } }, scales: { y: { beginAtZero: true }, x: { grid: { display: false }, ticks: { display: false } } } },
                             plugins: [{
-                                id: 'barLabelsOnPrint',
+                                id: 'barLabelsAlways',
                                 afterDatasetsDraw(chart) {
-                                    if (!window.matchMedia('print').matches) return;
                                     const { ctx, data } = chart;
                                     chart.getDatasetMeta(0).data.forEach((bar, index) => {
                                         const label = data.labels[index]; const val = data.datasets[0].data[index]; const barHeight = bar.base - bar.y;
-                                        if (val > 0 && barHeight > 25) { 
-                                            ctx.save(); ctx.translate(bar.x, bar.base - 8); ctx.rotate(-Math.PI / 2); ctx.fillStyle = '#ffffff'; ctx.font = 'bold 11px Poppins, sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 3;
-                                            ctx.fillText(`${label} (${val})`, 0, 0, barHeight - 16); ctx.restore();
+                                        if (val > 0) { 
+                                            if (barHeight > 40) {
+                                                // Jika batang cukup tinggi, tulis di dalam batang dari bawah ke atas
+                                                ctx.save(); ctx.translate(bar.x, bar.base - 8); ctx.rotate(-Math.PI / 2); ctx.fillStyle = '#ffffff'; ctx.font = 'bold 11px Poppins, sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 3;
+                                                ctx.fillText(`${label} (${val})`, 0, 0, barHeight - 16); ctx.restore();
+                                            } else {
+                                                // Jika batang terlalu pendek, tulis di atas batang agar tidak terpotong
+                                                ctx.save(); ctx.translate(bar.x, bar.y - 8); ctx.rotate(-Math.PI / 2); ctx.fillStyle = '#4b5563'; ctx.font = 'bold 10px Poppins, sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+                                                ctx.fillText(`${label} (${val})`, 0, 0); ctx.restore();
+                                            }
                                         }
                                     });
                                 }
