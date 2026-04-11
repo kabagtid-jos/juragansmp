@@ -865,7 +865,8 @@
                 let hasSchedule = res.jadwal && res.jadwal.length > 0;
                 let isPending = res.belumIsi && res.belumIsi.some(g => {
                     let rawG = String(g).trim(); let pureName = rawG.includes(" (") ? rawG.split(" (")[0].trim() : rawG;
-                    return pureName === String(currentUser).trim();
+                    // FIX: Jadikan kebal huruf besar/kecil dengan toLowerCase()
+                    return pureName.toLowerCase() === String(currentUser).trim().toLowerCase();
                 });
                 
                 if (new Date().getDay() === 5) { btnJurnal.onclick = () => showToast("Hari Jumat libur."); btnJurnal.classList.add('opacity-60', 'cursor-not-allowed'); }
