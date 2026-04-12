@@ -1045,12 +1045,21 @@
         function submitIzin() {
             const data = { tanggal: document.getElementById('izin-tanggal').value, namaGuru: document.getElementById('izin-guru').value, keterangan: document.getElementById('izin-keterangan').value };
             if(!data.namaGuru) return showToast("Pilih guru!");
+            
+            const submitBtn = document.querySelector('#izinForm button[type="submit"]');
+            if(submitBtn) { submitBtn.disabled = true; submitBtn.classList.add('opacity-50', 'cursor-not-allowed'); }
             showLoader("Menyimpan...");
+            
             callAPI('saveIzin', data).then(res => {
                 hideLoader();
+                if(submitBtn) { submitBtn.disabled = false; submitBtn.classList.remove('opacity-50', 'cursor-not-allowed'); }
                 if (res && res.success) { showToast("Izin disimpan!"); document.getElementById('izinForm').reset(); switchView('view-dashboard'); setTimeout(() => loadDashboardData(), 1000); } 
                 else showToast("Gagal menyimpan.");
-            }).catch(() => { hideLoader(); showToast("Koneksi gagal."); });
+            }).catch(() => { 
+                hideLoader(); 
+                if(submitBtn) { submitBtn.disabled = false; submitBtn.classList.remove('opacity-50', 'cursor-not-allowed'); }
+                showToast("Koneksi gagal."); 
+            });
         }
 
         function openHistory() {
@@ -1227,12 +1236,21 @@
         function submitAgenda() {
             const data = { tanggal: document.getElementById('agenda-tanggal').value, judul: document.getElementById('agenda-judul').value, keterangan: document.getElementById('agenda-keterangan').value };
             if(!data.tanggal || !data.judul) return showToast("Tanggal dan Judul wajib diisi!");
+            
+            const submitBtn = document.querySelector('#agendaForm button[type="submit"]');
+            if(submitBtn) { submitBtn.disabled = true; submitBtn.classList.add('opacity-50', 'cursor-not-allowed'); }
             showLoader("Menyimpan...");
+            
             callAPI('saveAgenda', data).then(res => {
                 hideLoader();
+                if(submitBtn) { submitBtn.disabled = false; submitBtn.classList.remove('opacity-50', 'cursor-not-allowed'); }
                 if(res && res.success) { showToast("Agenda disimpan!"); document.getElementById('agendaForm').reset(); currentDateView = new Date(data.tanggal); loadAgendas(); } 
                 else showToast("Gagal menyimpan.");
-            }).catch(() => { hideLoader(); showToast("Koneksi gagal."); });
+            }).catch(() => { 
+                hideLoader(); 
+                if(submitBtn) { submitBtn.disabled = false; submitBtn.classList.remove('opacity-50', 'cursor-not-allowed'); }
+                showToast("Koneksi gagal."); 
+            });
         }
 
         // --- Fungsi Rekap (Bulanan & Tahunan) ---
