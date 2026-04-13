@@ -16,6 +16,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Canvas Confetti untuk Efek Ulang Tahun -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     
     <style>
         html, body { 
@@ -133,38 +135,71 @@
         </div>
     </div>
 
+    <!-- POP-UP ULANG TAHUN MODAL (BARU) -->
+    <div id="birthdayModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[150] hidden items-center justify-center p-4 transition-opacity duration-500 opacity-0">
+        <div class="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl transform scale-50 transition-transform duration-500 relative text-center">
+            <!-- Decorative background -->
+            <div class="absolute inset-0 bg-gradient-to-br from-pink-400 via-purple-400 to-indigo-500 opacity-10"></div>
+            <!-- Header Image / Icon -->
+            <div class="bg-gradient-to-r from-pink-500 to-purple-600 p-6 relative overflow-hidden">
+                <div class="absolute -top-10 -right-10 w-32 h-32 bg-white opacity-20 rounded-full blur-2xl"></div>
+                <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-white opacity-20 rounded-full blur-2xl"></div>
+                <i class="fas fa-birthday-cake text-6xl text-white drop-shadow-lg animate-bounce mt-2"></i>
+            </div>
+            <div class="p-6 relative z-10">
+                <h2 class="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-pink-600 to-purple-600 mb-2">Selamat Ulang Tahun!</h2>
+                <p class="text-gray-600 text-sm mb-4">Hari ini adalah hari spesial untuk:</p>
+                <div id="birthday-names" class="text-lg font-bold text-gray-800 mb-5 bg-pink-50 py-3 px-4 rounded-xl border border-pink-100 shadow-sm leading-relaxed">
+                    <!-- Names injected here -->
+                </div>
+                <p class="text-[11px] text-gray-500 mb-6 italic">"Semoga panjang umur, sehat selalu, dan penuh keberkahan."</p>
+                <button onclick="closeBirthdayModal()" class="w-full bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-bold py-3 rounded-xl shadow-lg transform transition hover:scale-105 active:scale-95">Berikan Selamat & Lanjutkan</button>
+            </div>
+        </div>
+    </div>
+
     <!-- APP WRAPPER -->
     <div id="app-wrapper">
 
         <!-- 1. LOGIN -->
         <div id="view-login" class="app-view active flex flex-col px-6 py-8 bg-gradient-to-br from-indigo-500 to-purple-600">
             <div class="w-full max-w-sm mx-auto flex flex-col mt-4 mb-auto">
-                <div class="glass-card p-8 w-full mb-8">
-                    <div class="text-center mb-8">
-                        <div class="w-24 h-24 mx-auto mb-4 flex items-center justify-center">
-                            <img src="https://i.ibb.co.com/PvyzRgq9/Logo-SMP-Unggulan-Abu-Zairi.png" alt="Logo SMP" class="w-full h-full object-contain drop-shadow-md">
+                <!-- Mempertahankan Update Desain Login Terbaru dengan Watermark -->
+                <div class="glass-card p-8 w-full mb-8 relative overflow-hidden group !rounded-3xl border border-white/40 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.2)] bg-white/80 backdrop-blur-xl">
+                    <div class="absolute -top-12 -right-12 w-40 h-40 bg-indigo-400/20 rounded-full blur-3xl group-hover:bg-indigo-400/30 transition-all duration-700 pointer-events-none"></div>
+                    <div class="absolute -bottom-12 -left-12 w-40 h-40 bg-purple-400/20 rounded-full blur-3xl group-hover:bg-purple-400/30 transition-all duration-700 pointer-events-none"></div>
+
+                    <div class="absolute inset-0 z-0 flex items-center justify-center pointer-events-none opacity-[0.05] transform -rotate-12 scale-125 transition-transform duration-700 group-hover:scale-150">
+                        <img src="https://i.ibb.co.com/PvyzRgq9/Logo-SMP-Unggulan-Abu-Zairi.png" alt="Watermark" class="w-full h-full object-contain">
+                    </div>
+                    <div class="absolute inset-0 z-0 pointer-events-none bg-gradient-to-tl from-indigo-100/20 via-transparent to-purple-100/20 mix-blend-overlay"></div>
+
+                    <div class="text-center mb-8 relative z-10">
+                        <div class="w-24 h-24 mx-auto mb-4 flex items-center justify-center bg-gradient-to-br from-indigo-50 to-white rounded-full shadow-[0_8px_16px_-6px_rgba(79,70,229,0.2)] border border-white p-3">
+                            <img src="https://i.ibb.co.com/PvyzRgq9/Logo-SMP-Unggulan-Abu-Zairi.png" alt="Logo SMP" class="w-full h-full object-contain drop-shadow-md hover:scale-105 transition-transform duration-300">
                         </div>
-                        <h1 class="text-2xl font-bold text-gray-800">Si Juragan</h1>
-                        <p class="text-sm text-gray-500 mt-1">Sistem Jurnal Guru Andalan</p>
-                        <div class="flex items-center justify-center gap-2 mt-1">
-                            <i class="fas fa-star text-indigo-600 animate-pulse text-xs" style="animation-duration: 1s;"></i>
-                            <p class="text-sm font-bold text-indigo-600">SMP Unggulan Abu Zairi</p>
-                            <i class="fas fa-star text-indigo-600 animate-pulse text-xs" style="animation-duration: 1.5s;"></i>
+                        <h1 class="text-3xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-indigo-700 to-purple-700 tracking-tight">Si Juragan</h1>
+                        <p class="text-sm text-gray-500 mt-1.5 font-medium">Sistem Jurnal Guru Andalan</p>
+                        <div class="flex items-center justify-center gap-2 mt-3 bg-indigo-50/70 py-1.5 px-4 rounded-full w-max mx-auto border border-indigo-100/50">
+                            <i class="fas fa-star text-yellow-400 animate-pulse text-[10px]" style="animation-duration: 1s;"></i>
+                            <p class="text-[11px] font-bold text-indigo-800 tracking-wide uppercase">SMP Unggulan Abu Zairi</p>
+                            <i class="fas fa-star text-yellow-400 animate-pulse text-[10px]" style="animation-duration: 1.5s;"></i>
                         </div>
                     </div>
-                    <form id="loginForm" onsubmit="event.preventDefault(); handleLogin();">
+                    <form id="loginForm" onsubmit="event.preventDefault(); handleLogin();" class="relative z-10">
                         <div class="mb-6">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">NIY (Nomor Induk Yayasan)</label>
-                            <div class="relative">
-                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <i class="fas fa-id-card text-gray-400"></i>
+                            <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2 pl-1">NIY (Nomor Induk Yayasan)</label>
+                            <div class="relative group/input">
+                                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors duration-300 group-focus-within/input:text-indigo-600 text-gray-400">
+                                    <i class="fas fa-id-card text-lg"></i>
                                 </div>
-                                <input type="text" id="niy" class="input-field w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-indigo-500" placeholder="Masukkan NIY Anda" oninput="checkNIY(this.value)" required autocomplete="off">
+                                <input type="text" id="niy" class="input-field w-full pl-12 pr-4 py-3.5 bg-gray-50/50 border-2 border-gray-200/80 rounded-2xl focus:outline-none focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 text-gray-800 font-medium transition-all duration-300" placeholder="Masukkan NIY Anda" oninput="checkNIY(this.value)" required autocomplete="off">
                             </div>
-                            <div id="nama-guru-preview" class="mt-2 text-sm font-medium hidden transition-all duration-300"></div>
+                            <div id="nama-guru-preview" class="mt-2 text-sm font-medium hidden transition-all duration-300 px-1"></div>
                         </div>
-                        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl shadow-lg transition duration-300 transform hover:-translate-y-1 cursor-pointer">
-                            Masuk
+                        <button type="submit" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-3.5 rounded-2xl shadow-[0_8px_20px_-6px_rgba(79,70,229,0.5)] hover:shadow-[0_12px_25px_-8px_rgba(79,70,229,0.6)] transition-all duration-300 transform hover:-translate-y-1 cursor-pointer flex justify-center items-center gap-2 group/btn">
+                            <span>Masuk Sekarang</span>
+                            <i class="fas fa-arrow-right text-sm group-hover/btn:translate-x-1 transition-transform"></i>
                         </button>
                     </form>
                 </div>
@@ -210,6 +245,11 @@
 
             <div class="px-5 py-6 pb-20 flex-1">
                 
+                <!-- BANNER ULANG TAHUN (Otomatis Muncul) -->
+                <div id="dashboard-birthday-banner" class="hidden mb-6">
+                    <!-- Disuntik melalui JS -->
+                </div>
+
                 <!-- Menu Isi Jurnal -->
                 <div id="menu-isi-jurnal" onclick="openInputJurnal()" class="glass-card p-4 flex items-center cursor-pointer hover:shadow-lg transition transform hover:-translate-y-1 bg-white mb-4 border-l-4 border-blue-500" style="display: none;">
                     <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xl mr-4 transition"><i class="fas fa-edit"></i></div>
@@ -854,12 +894,104 @@
             }).catch(() => { if(!cached) container.innerHTML = `<div class="text-white text-xs text-center py-2">Koneksi terputus.</div>`; });
         }
 
+        // --- FUNGSI ANIMASI ULANG TAHUN (BARU) ---
+        function showBirthdayModal(names, isManual = false) {
+            const modal = document.getElementById('birthdayModal');
+            const namesEl = document.getElementById('birthday-names');
+            if (names && names.length > 0) {
+                namesEl.innerHTML = names.map(n => `<span class="block mb-1 text-pink-600">🎉 ${n} 🎉</span>`).join('');
+            }
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            
+            // Trigger reflow browser untuk animasi CSS
+            void modal.offsetWidth;
+            
+            modal.classList.remove('opacity-0');
+            modal.querySelector('div').classList.remove('scale-50');
+            modal.querySelector('div').classList.add('scale-100');
+
+            // --- Efek Confetti ---
+            var duration = 4 * 1000;
+            var end = Date.now() + duration;
+
+            (function frame() {
+                confetti({
+                    particleCount: 6,
+                    angle: 60,
+                    spread: 60,
+                    origin: { x: 0 },
+                    colors: ['#ec4899', '#8b5cf6', '#6366f1', '#fcd34d']
+                });
+                confetti({
+                    particleCount: 6,
+                    angle: 120,
+                    spread: 60,
+                    origin: { x: 1 },
+                    colors: ['#ec4899', '#8b5cf6', '#6366f1', '#fcd34d']
+                });
+
+                if (Date.now() < end) {
+                    requestAnimationFrame(frame);
+                }
+            }());
+        }
+
+        function closeBirthdayModal() {
+            const modal = document.getElementById('birthdayModal');
+            modal.classList.add('opacity-0');
+            modal.querySelector('div').classList.remove('scale-100');
+            modal.querySelector('div').classList.add('scale-50');
+            setTimeout(() => {
+                modal.classList.remove('flex');
+                modal.classList.add('hidden');
+            }, 500);
+        }
+        // ------------------------------------------
+
         function renderDashboardData(res) {
             const jc = document.getElementById('jadwal-container');
             const bc = document.getElementById('belum-isi-container');
             const ic = document.getElementById('izin-container');
             const sac = document.getElementById('siswa-absen-container');
+            const bdayBanner = document.getElementById('dashboard-birthday-banner');
 
+            // LOGIKA ULANG TAHUN DI DASHBOARD
+            if (res.ulangTahun && res.ulangTahun.length > 0) {
+                if (bdayBanner) {
+                    bdayBanner.innerHTML = `
+                        <div class="bg-gradient-to-r from-pink-500 to-purple-600 rounded-2xl p-4 shadow-lg text-white flex items-center justify-between overflow-hidden relative group cursor-pointer" onclick="showBirthdayModal(${JSON.stringify(res.ulangTahun).replace(/"/g, '&quot;')}, true)">
+                            <div class="absolute -right-4 -bottom-4 opacity-20 transform group-hover:scale-110 group-hover:-rotate-12 transition-transform duration-500">
+                                <i class="fas fa-gift text-7xl"></i>
+                            </div>
+                            <div class="relative z-10 flex items-center w-full">
+                                <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mr-4 backdrop-blur-sm border border-white/30 flex-shrink-0">
+                                    <i class="fas fa-birthday-cake text-2xl animate-pulse"></i>
+                                </div>
+                                <div class="w-3/4">
+                                    <h4 class="font-bold text-sm leading-tight drop-shadow-sm">Yang Berulang Tahun Hari Ini!</h4>
+                                    <p class="text-xs font-medium text-pink-100 truncate mt-0.5">${res.ulangTahun.join(', ')}</p>
+                                </div>
+                            </div>
+                        </div>`;
+                    bdayBanner.classList.remove('hidden');
+                }
+
+                // Cek LocalStorage untuk Pop-up 1x sehari
+                const todayStr = new Date().toISOString().split('T')[0];
+                const bdayKey = 'bday_shown_' + todayStr;
+                if (!localStorage.getItem(bdayKey)) {
+                    setTimeout(() => {
+                        showBirthdayModal(res.ulangTahun);
+                        localStorage.setItem(bdayKey, 'true');
+                    }, 1000); // Muncul 1 detik setelah dashboard termuat
+                }
+            } else {
+                if (bdayBanner) bdayBanner.classList.add('hidden');
+            }
+
+            // (Kode lanjutan render dashboard normal)
             if(currentUserRole === 'Guru') {
                 let btnJurnal = document.getElementById('menu-isi-jurnal');
                 let hasSchedule = res.jadwal && res.jadwal.length > 0;
