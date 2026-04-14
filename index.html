@@ -661,7 +661,7 @@
         // =========================================================================
         // PENGATURAN API GOOGLE APPS SCRIPT (TERBARU)
         // =========================================================================
-        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzsVUhDlob4_NN2W3kY3Ev6mzOzvrQTavvxuB8vRgADuaRrdlITwBlNMRicaWCIpEHo7g/exec"
+        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbwewMIFsS6RSnD9w0Imv5ydF85TvAiUE3MlndJruGrA53dR28y0YJMoZVUShzDzOTLqCQ/exec"
         const CACHE_PREFIX = "sijuragan_";
 
         function callAPI(action, payload = null, useCache = false, cacheTime = 300000) {
@@ -818,12 +818,12 @@
                         btnIzin.style.display = 'flex';
                         btnJurnal.style.display = 'none'; btnRiwayat.style.display = 'none';
                         jadwalSectionWrapper.style.display = 'none';
-                    } else if (currentUserRole === 'TU') {
+                    } else if (currentUserRole === 'TU' || currentUserRole === 'Piket') {
                         document.getElementById('admin-menu').classList.add('hidden');
                         btnIzin.style.display = 'none';
                         btnJurnal.style.display = 'flex'; btnRiwayat.style.display = 'flex';
                         jadwalSectionWrapper.style.display = 'block';
-                        document.getElementById('label-jadwal-dashboard').innerText = "Semua Jadwal Guru Hari Ini";
+                        document.getElementById('label-jadwal-dashboard').innerText = "Semua Jadwal Hari Ini (Mode Piket/TU)";
                     } else {
                         document.getElementById('admin-menu').classList.add('hidden');
                         btnIzin.style.display = 'none';
@@ -837,8 +837,7 @@
                     showToast("Login berhasil!");
                     
                     if (res.dashData && res.dashData.success) {
-                        // Simpan dashboard awal ke cache agar next-load sangat cepat
-                        const dashCacheKey = CACHE_PREFIX + 'getDashboardData_' + JSON.stringify(currentUserRole === 'TU' ? 'ALL' : currentUser);
+                        const dashCacheKey = CACHE_PREFIX + 'getDashboardData_' + JSON.stringify((currentUserRole === 'TU' || currentUserRole === 'Piket') ? 'ALL' : currentUser);
                         sessionStorage.setItem(dashCacheKey, JSON.stringify({ timestamp: Date.now(), data: res.dashData }));
                         renderDashboardData(res.dashData);
                     } else loadDashboardData();
@@ -849,7 +848,6 @@
                         if (res.agendas.todayAgendas && res.agendas.todayAgendas.length > 0) showAgendaModal(res.agendas.todayAgendas);
                     } else checkTodayAgenda();
 
-                    // BACKGROUND PREFETCHING: Memuat data form di background agar menu terbuka instan nantinya
                     setTimeout(() => {
                         callAPI('getFormOptions', { role: currentUserRole, namaGuru: currentUser }, true, 3600000);
                         if (currentUserRole !== 'Guru') callAPI('getSemuaGuru', null, true, 3600000);
@@ -1017,7 +1015,7 @@
             } else {
                 jc.innerHTML = (res.jadwal && res.jadwal.length) ? res.jadwal.map(j => `
                     <div class="bg-white border border-gray-100 rounded-lg p-3 shadow-sm flex justify-between items-center border-l-4 border-l-blue-500">
-                        <div><h4 class="font-bold text-gray-800 text-sm">${j.mapel}</h4><p class="text-xs text-gray-500">${j.kelas} ${currentUserRole === 'TU' ? ' ('+j.guru+')' : ''}</p></div>
+                        <div><h4 class="font-bold text-gray-800 text-sm">${j.mapel}</h4><p class="text-xs text-gray-500">${j.kelas} ${(currentUserRole === 'TU' || currentUserRole === 'Piket') ? ' ('+j.guru+')' : ''}</p></div>
                         <div class="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-1 rounded">${j.jam}</div>
                     </div>`).join('') : '<div class="bg-gray-50 rounded-lg p-3 text-center text-xs text-gray-500">Tidak ada jadwal hari ini</div>';
             }
@@ -1034,14 +1032,13 @@
         }
 
         function loadDashboardData() {
-            const payloadGuru = currentUserRole === 'TU' ? 'ALL' : currentUser;
+            const payloadGuru = (currentUserRole === 'TU' || currentUserRole === 'Piket') ? 'ALL' : currentUser;
             const cacheKey = CACHE_PREFIX + 'getDashboardData_' + JSON.stringify(payloadGuru);
             const cached = sessionStorage.getItem(cacheKey);
             
             const jc = document.getElementById('jadwal-container');
             const bc = document.getElementById('belum-isi-container');
 
-            // Optimistic UI: Render data cache jika ada seketika
             if (cached) {
                 renderDashboardData(JSON.parse(cached).data);
             } else {
@@ -1049,7 +1046,6 @@
                 bc.innerHTML = '<li class="text-xs text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i>Memuat...</li>';
             }
 
-            // Silent Update: Selalu perbarui data di latar belakang
             callAPI('getDashboardData', payloadGuru).then(res => { 
                 if(res && res.success) {
                     sessionStorage.setItem(cacheKey, JSON.stringify({ timestamp: Date.now(), data: res }));
@@ -1066,13 +1062,12 @@
             document.getElementById('hidden-absen-otomatis').value = '';
             document.getElementById('status-absen-otomatis').innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Menunggu kelas dipilih...';
             
-            // Gunakan Cache untuk opsi form (Disimpan 1 Jam)
             callAPI('getFormOptions', { role: currentUserRole, namaGuru: currentUser }, true, 3600000).then(res => {
                 hideLoader();
                 if(res && res.success) {
                     if (res.isTU) {
                         document.getElementById('tu-guru-container').classList.remove('hidden');
-                        document.getElementById('input-tu-guru').innerHTML = '<option value="">Pilih Guru yang Digantikan...</option>' + (res.guru || []).map(g => `<option value="${g}">${g}</option>`).join('');
+                        document.getElementById('input-tu-guru').innerHTML = '<option value="">Pilih Guru Asli yang Digantikan...</option>' + (res.guru || []).map(g => `<option value="${g}">${g}</option>`).join('');
                     } else document.getElementById('tu-guru-container').classList.add('hidden');
 
                     document.getElementById('input-kelas').innerHTML = '<option value="">Pilih Kelas</option>' + (res.kelas || []).map(k => `<option value="${k}">${k}</option>`).join('');
@@ -1132,7 +1127,7 @@
             if (!jams.length) return showToast("Pilih jam mengajar!");
             
             let guruPengisi = currentUser; 
-            if(currentUserRole === 'TU' || currentUserRole === 'Admin') {
+            if(currentUserRole === 'TU' || currentUserRole === 'Piket' || currentUserRole === 'Admin') {
                  const tuGuruVal = document.getElementById('input-tu-guru').value;
                  if(!tuGuruVal) return showToast("Pilih Guru yang digantikan!");
                  guruPengisi = currentUser + " (Ganti " + tuGuruVal + ")"; 
