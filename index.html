@@ -1191,8 +1191,6 @@
                                 <option value="Izin">Izin</option>
                                 <option value="Alpa">Alpa</option>
                                 <option value="Bolos">Bolos</option>
-                                <option value="UKS">UKS</option>
-                                <option value="Dispen">Dispen</option>
                             </select>
                         </div>
                     </div>
@@ -1209,9 +1207,9 @@
                 selectEl.classList.add('text-gray-700', 'border-gray-300', 'bg-white');
             } else if (val === 'Alpa' || val === 'Bolos') {
                 selectEl.classList.add('text-red-600', 'border-red-300', 'bg-red-50');
-            } else if (val === 'Sakit' || val === 'UKS') {
+            } else if (val === 'Sakit') {
                 selectEl.classList.add('text-yellow-600', 'border-yellow-300', 'bg-yellow-50');
-            } else if (val === 'Izin' || val === 'Dispen') {
+            } else if (val === 'Izin') {
                 selectEl.classList.add('text-blue-600', 'border-blue-300', 'bg-blue-50');
             }
         }
