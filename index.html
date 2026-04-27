@@ -472,11 +472,34 @@
                         </div>
                     </div>
 
-                    <div id="otomatis-absen-container" class="hidden mt-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Siswa Tidak Hadir (Otomatis)</label>
-                        <div class="p-3 bg-gray-100 border border-gray-300 rounded-xl text-sm text-gray-600 transition-all">
-                            <div id="status-absen-otomatis"><i class="fas fa-spinner fa-spin mr-2"></i>Menunggu kelas dipilih...</div>
-                            <input type="hidden" id="hidden-absen-otomatis" value="">
+                    <div id="otomatis-absen-container" class="hidden mt-6 mb-2">
+                        <label class="block text-[15px] font-semibold text-gray-800 mb-3">Kehadiran Siswa di Kelas Ini</label>
+                        <div class="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm">
+                            <!-- Status Absen Pusat -->
+                            <div class="p-4 border-b border-gray-100">
+                                <div class="flex items-center text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">
+                                    <i class="fas fa-server mr-2 text-gray-400"></i> DATA ABSEN APEL/PUSAT:
+                                </div>
+                                <div id="status-absen-otomatis" class="flex items-center text-sm font-bold text-gray-800">
+                                    <i class="fas fa-spinner fa-spin text-lg mr-2 text-indigo-500"></i> Menunggu kelas dipilih...
+                                </div>
+                                <input type="hidden" id="hidden-absen-otomatis" value="">
+                            </div>
+                            
+                            <!-- Header Daftar Siswa -->
+                            <div class="bg-[#f8f8fc] px-4 py-3 border-b border-gray-100 flex justify-between items-center">
+                                <div class="flex items-center text-xs font-bold text-indigo-700">
+                                    <i class="fas fa-users mr-2"></i> DAFTAR SEMUA SISWA
+                                </div>
+                                <div class="text-[10px] text-indigo-500 font-medium">
+                                    Ubah jika ada yang bolos/izin
+                                </div>
+                            </div>
+                            
+                            <!-- List Siswa -->
+                            <div id="manual-absen-wrapper" class="divide-y divide-gray-100 max-h-[350px] overflow-y-auto custom-scrollbar">
+                                <!-- List siswa di-generate via JS -->
+                            </div>
                         </div>
                     </div>
 
@@ -661,7 +684,7 @@
         // =========================================================================
         // PENGATURAN API GOOGLE APPS SCRIPT (TERBARU)
         // =========================================================================
-        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbwewMIFsS6RSnD9w0Imv5ydF85TvAiUE3MlndJruGrA53dR28y0YJMoZVUShzDzOTLqCQ/exec"
+        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzOc_FDP2s-9KdLygermFi8sGKpmTfDQeKGNaqucNfeKFmAxlvu45s6_f0fhKUFx7chmw/exec"
         const CACHE_PREFIX = "sijuragan_";
 
         function callAPI(action, payload = null, useCache = false, cacheTime = 300000) {
@@ -1060,7 +1083,7 @@
             showLoader("Menyiapkan form...");
             document.getElementById('otomatis-absen-container').classList.add('hidden');
             document.getElementById('hidden-absen-otomatis').value = '';
-            document.getElementById('status-absen-otomatis').innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Menunggu kelas dipilih...';
+            document.getElementById('status-absen-otomatis').innerHTML = '<i class="fas fa-spinner fa-spin text-lg mr-2 text-indigo-500"></i> Menunggu kelas dipilih...';
             
             callAPI('getFormOptions', { role: currentUserRole, namaGuru: currentUser }, true, 3600000).then(res => {
                 hideLoader();
@@ -1101,25 +1124,96 @@
             if (drop && !drop.classList.contains('hidden') && !drop.contains(e.target) && !disp.contains(e.target)) drop.classList.add('hidden');
         });
 
+        let currentStudents = []; // Variabel global untuk menyimpan siswa kelas saat ini
+
         function loadSiswa(kelas) {
             const absenContainer = document.getElementById('otomatis-absen-container');
             const statusText = document.getElementById('status-absen-otomatis');
             const hiddenInput = document.getElementById('hidden-absen-otomatis');
-            if (!kelas) { absenContainer.classList.add('hidden'); hiddenInput.value = ''; return; }
+            const manualWrapper = document.getElementById('manual-absen-wrapper');
+            
+            if (!kelas) { 
+                absenContainer.classList.add('hidden'); 
+                hiddenInput.value = ''; 
+                manualWrapper.innerHTML = '';
+                currentStudents = [];
+                return; 
+            }
 
             absenContainer.classList.remove('hidden');
-            statusText.innerHTML = '<i class="fas fa-spinner fa-spin mr-2 text-indigo-500"></i>Mengecek data absen pusat...';
+            statusText.innerHTML = '<i class="fas fa-spinner fa-spin text-lg mr-2 text-indigo-500"></i> Mengecek data absen pusat...';
             hiddenInput.value = '';
+            manualWrapper.innerHTML = '<div class="p-6 text-center"><i class="fas fa-spinner fa-spin text-xl text-indigo-400 mb-2"></i><p class="text-xs text-gray-500">Memuat daftar siswa...</p></div>'; 
+            currentStudents = [];
             
-            // Cache pengecekan absen selama 5 menit
+            // 1. Cek absen pusat otomatis
             callAPI('getAbsenSiswaHariIni', kelas, true, 300000).then(res => {
                 if (res && res.success) {
                     if (res.data && res.data.length > 0) {
-                        statusText.innerHTML = `<span class="text-red-600 font-semibold"><i class="fas fa-user-times mr-1"></i> Absen: ${res.data}</span>`;
+                        statusText.innerHTML = `<i class="fas fa-user-times text-lg mr-2 text-red-500"></i> <span class="text-red-600">${res.data}</span>`;
                         hiddenInput.value = res.data;
-                    } else { statusText.innerHTML = `<span class="text-green-600 font-semibold"><i class="fas fa-check-circle mr-1"></i> Nihil (Semua siswa hadir)</span>`; }
-                } else statusText.innerHTML = `<span class="text-yellow-600"><i class="fas fa-exclamation-triangle mr-1"></i> Gagal mengecek. Anggap Nihil.</span>`;
-            }).catch(() => statusText.innerHTML = '<span class="text-red-500"><i class="fas fa-wifi mr-1"></i> Koneksi terputus.</span>');
+                    } else { statusText.innerHTML = `<i class="fas fa-check-circle text-lg mr-2 text-green-500"></i> <span class="text-green-600">Nihil (Semua hadir saat apel)</span>`; }
+                } else statusText.innerHTML = `<i class="fas fa-exclamation-triangle text-lg mr-2 text-yellow-500"></i> <span class="text-yellow-600">Gagal mengecek. Anggap Nihil.</span>`;
+            }).catch(() => statusText.innerHTML = `<i class="fas fa-wifi text-lg mr-2 text-red-500"></i> <span class="text-red-500">Koneksi terputus.</span>`);
+
+            // 2. Tarik daftar nama siswa untuk list manual
+            callAPI('getSiswaByKelas', kelas, true, 86400000).then(res => { // Cache 24 jam
+                if (res && res.success) {
+                    currentStudents = res.data || [];
+                    renderStudentList();
+                } else {
+                    manualWrapper.innerHTML = '<div class="p-6 text-center text-xs text-red-500">Gagal memuat daftar siswa.</div>';
+                }
+            }).catch(() => {
+                manualWrapper.innerHTML = '<div class="p-6 text-center text-xs text-red-500">Koneksi terputus saat memuat daftar siswa.</div>';
+            });
+        }
+
+        function renderStudentList() {
+            const wrapper = document.getElementById('manual-absen-wrapper');
+            if (currentStudents.length === 0) {
+                wrapper.innerHTML = '<div class="p-6 text-center text-xs text-gray-500">Tidak ada data siswa untuk kelas ini.</div>';
+                return;
+            }
+
+            let html = '';
+            currentStudents.forEach((siswa, index) => {
+                html += `
+                    <div class="flex items-center justify-between p-3.5 hover:bg-gray-50 transition student-attendance-row bg-white">
+                        <div class="flex items-center text-sm font-semibold text-gray-700 truncate pr-3 flex-1">
+                            <span class="text-gray-400 w-6 text-right mr-3 flex-shrink-0 text-xs font-mono">${index + 1}.</span>
+                            <span class="truncate student-name-label">${siswa}</span>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <select class="student-status-select text-xs font-semibold px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white cursor-pointer outline-none transition-colors" onchange="updateSelectColor(this)">
+                                <option value="Hadir" selected>Hadir</option>
+                                <option value="Sakit">Sakit</option>
+                                <option value="Izin">Izin</option>
+                                <option value="Alpa">Alpa</option>
+                                <option value="Bolos">Bolos</option>
+                                <option value="UKS">UKS</option>
+                                <option value="Dispen">Dispen</option>
+                            </select>
+                        </div>
+                    </div>
+                `;
+            });
+            wrapper.innerHTML = html;
+        }
+
+        function updateSelectColor(selectEl) {
+            const val = selectEl.value;
+            selectEl.classList.remove('text-gray-700', 'text-red-600', 'text-blue-600', 'text-yellow-600', 'border-gray-300', 'border-red-300', 'border-yellow-300', 'border-blue-300', 'bg-red-50', 'bg-yellow-50', 'bg-blue-50', 'bg-white');
+            
+            if (val === 'Hadir') {
+                selectEl.classList.add('text-gray-700', 'border-gray-300', 'bg-white');
+            } else if (val === 'Alpa' || val === 'Bolos') {
+                selectEl.classList.add('text-red-600', 'border-red-300', 'bg-red-50');
+            } else if (val === 'Sakit' || val === 'UKS') {
+                selectEl.classList.add('text-yellow-600', 'border-yellow-300', 'bg-yellow-50');
+            } else if (val === 'Izin' || val === 'Dispen') {
+                selectEl.classList.add('text-blue-600', 'border-blue-300', 'bg-blue-50');
+            }
         }
 
         function submitJournal() {
@@ -1133,6 +1227,24 @@
                  guruPengisi = currentUser + " (Ganti " + tuGuruVal + ")"; 
             }
             
+            // Gabungkan absen otomatis dan manual (dropdown list siswa)
+            let absenOtomatis = document.getElementById('hidden-absen-otomatis').value.trim();
+            
+            let manualItems = [];
+            document.querySelectorAll('.student-attendance-row').forEach(row => {
+                const siswa = row.querySelector('.student-name-label').innerText.trim();
+                const ket = row.querySelector('.student-status-select').value;
+                if (siswa && ket !== 'Hadir') {
+                    manualItems.push(`${siswa} (${ket})`);
+                }
+            });
+            let absenManual = manualItems.join(', ');
+
+            let finalAbsenArr = [];
+            if (absenOtomatis) finalAbsenArr.push(absenOtomatis);
+            if (absenManual) finalAbsenArr.push(absenManual);
+            let finalAbsenStr = finalAbsenArr.join(', ');
+            
             const data = {
                 hari: document.getElementById('input-hari').value,
                 tanggal: document.getElementById('input-tanggal').value,
@@ -1141,7 +1253,7 @@
                 kelas: document.getElementById('input-kelas').value,
                 mapel: document.getElementById('input-mapel').value,
                 materi: document.getElementById('input-materi').value,
-                siswaAbsenStr: document.getElementById('hidden-absen-otomatis').value,
+                siswaAbsenStr: finalAbsenStr,
                 catatan: document.getElementById('input-catatan').value
             };
 
